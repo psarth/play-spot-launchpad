@@ -33,10 +33,13 @@ const Navbar = () => {
             </a>
           </div>
 
-          {/* CTA Button */}
-          <div className="hidden md:block">
-            <Button variant="hero" size="lg">
-              Book Now
+          {/* CTA Buttons */}
+          <div className="hidden md:flex items-center gap-3">
+            <Button variant="ghost" size="default" asChild>
+              <a href="/login">Log In</a>
+            </Button>
+            <Button variant="hero" size="default" asChild>
+              <a href="/signup">Sign Up</a>
             </Button>
           </div>
 
@@ -76,9 +79,14 @@ const Navbar = () => {
             >
               Contact
             </a>
-            <Button variant="hero" size="lg" className="w-full">
-              Book Now
-            </Button>
+            <div className="flex flex-col gap-2 pt-2">
+              <Button variant="ghost" size="default" className="w-full" asChild>
+                <a href="/login">Log In</a>
+              </Button>
+              <Button variant="hero" size="default" className="w-full" asChild>
+                <a href="/signup">Sign Up</a>
+              </Button>
+            </div>
           </div>
         )}
       </div>
