@@ -14,6 +14,62 @@ export type Database = {
   }
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          booking_date: string
+          created_at: string
+          customer_id: string
+          end_time: string
+          id: string
+          notes: string | null
+          payment_intent_id: string | null
+          payment_status: string
+          start_time: string
+          status: string
+          total_amount: number
+          updated_at: string
+          venue_id: string
+        }
+        Insert: {
+          booking_date: string
+          created_at?: string
+          customer_id: string
+          end_time: string
+          id?: string
+          notes?: string | null
+          payment_intent_id?: string | null
+          payment_status?: string
+          start_time: string
+          status?: string
+          total_amount: number
+          updated_at?: string
+          venue_id: string
+        }
+        Update: {
+          booking_date?: string
+          created_at?: string
+          customer_id?: string
+          end_time?: string
+          id?: string
+          notes?: string | null
+          payment_intent_id?: string | null
+          payment_status?: string
+          start_time?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -38,6 +94,109 @@ export type Database = {
         }
         Relationships: []
       }
+      sports: {
+        Row: {
+          created_at: string
+          description: string | null
+          icon: string | null
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          icon?: string | null
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
+      time_slots: {
+        Row: {
+          created_at: string
+          date: string
+          end_time: string
+          id: string
+          is_available: boolean | null
+          start_time: string
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          end_time: string
+          id?: string
+          is_available?: boolean | null
+          start_time: string
+          venue_id: string
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          end_time?: string
+          id?: string
+          is_available?: boolean | null
+          start_time?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "time_slots_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount: number
+          booking_id: string
+          created_at: string
+          currency: string | null
+          id: string
+          payment_intent_id: string | null
+          payment_method: string | null
+          status: string
+        }
+        Insert: {
+          amount: number
+          booking_id: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          payment_intent_id?: string | null
+          payment_method?: string | null
+          status: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          payment_intent_id?: string | null
+          payment_method?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -58,6 +217,62 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      venues: {
+        Row: {
+          address: string | null
+          amenities: string[] | null
+          created_at: string
+          description: string | null
+          id: string
+          images: string[] | null
+          is_active: boolean | null
+          location: string
+          name: string
+          price_per_hour: number
+          provider_id: string
+          sport_id: string
+          updated_at: string
+        }
+        Insert: {
+          address?: string | null
+          amenities?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          location: string
+          name: string
+          price_per_hour: number
+          provider_id: string
+          sport_id: string
+          updated_at?: string
+        }
+        Update: {
+          address?: string | null
+          amenities?: string[] | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          location?: string
+          name?: string
+          price_per_hour?: number
+          provider_id?: string
+          sport_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venues_sport_id_fkey"
+            columns: ["sport_id"]
+            isOneToOne: false
+            referencedRelation: "sports"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
