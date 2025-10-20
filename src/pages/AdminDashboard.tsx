@@ -62,7 +62,7 @@ const AdminDashboard = () => {
       .from("user_roles")
       .select("role")
       .eq("user_id", user.id)
-      .eq("role", "admin")
+      .eq("role", "admin" as any)
       .single();
 
     if (error || !data) {

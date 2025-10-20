@@ -63,8 +63,8 @@ const ManageBookings = () => {
       .from("bookings")
       .select(`
         *,
-        venues:venue_id (name, location),
-        profiles:customer_id (full_name, phone)
+        venues!venue_id (name, location),
+        profiles!customer_id (full_name, phone)
       `)
       .in("venue_id", venueIds)
       .order("booking_date", { ascending: false });

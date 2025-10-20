@@ -62,6 +62,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "bookings_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "bookings_venue_id_fkey"
             columns: ["venue_id"]
             isOneToOne: false
@@ -288,7 +295,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "customer" | "provider"
+      app_role: "customer" | "provider" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -416,7 +423,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["customer", "provider"],
+      app_role: ["customer", "provider", "admin"],
     },
   },
 } as const
