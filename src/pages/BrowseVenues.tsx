@@ -41,6 +41,27 @@ const BrowseVenues = () => {
   useEffect(() => {
     fetchSports();
     fetchVenues();
+
+    // Set up realtime subscription for venues
+    const channel = supabase
+      .channel('venues-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'venues'
+        },
+        (payload) => {
+          console.log('Venue change detected:', payload);
+          fetchVenues(); // Refresh venues when any change occurs
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {

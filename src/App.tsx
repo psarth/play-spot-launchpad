@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 import BrowseVenues from "./pages/BrowseVenues";
 import BookVenue from "./pages/BookVenue";
 import MyBookings from "./pages/MyBookings";
+import MyProfile from "./pages/MyProfile";
 import ProviderDashboard from "./pages/ProviderDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 
@@ -30,6 +31,7 @@ const App = () => (
           <Route path="/browse-venues" element={<BrowseVenues />} />
           <Route path="/book-venue/:venueId" element={<BookVenue />} />
           <Route path="/my-bookings" element={<MyBookings />} />
+          <Route path="/my-profile" element={<MyProfile />} />
           <Route path="/provider-dashboard" element={<ProviderDashboard />} />
           <Route path="/admin-dashboard" element={<AdminDashboard />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
