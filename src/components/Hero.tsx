@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import heroImage from "@/assets/hero-sports.jpg";
 
 const Hero = () => {
+  const navigate = useNavigate();
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image with Overlay */}
@@ -29,11 +32,21 @@ const Hero = () => {
             nets, find your game in minutes.
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
-            <Button variant="hero" size="lg" className="text-lg px-8 py-6 h-auto">
+            <Button 
+              variant="hero" 
+              size="lg" 
+              className="text-lg px-8 py-6 h-auto"
+              onClick={() => navigate("/browse-venues")}
+            >
               Book Now
               <ArrowRight className="ml-2" />
             </Button>
-            <Button variant="outline" size="lg" className="text-lg px-8 py-6 h-auto">
+            <Button 
+              variant="outline" 
+              size="lg" 
+              className="text-lg px-8 py-6 h-auto"
+              onClick={() => navigate("/browse-venues")}
+            >
               Explore Venues
             </Button>
           </div>
