@@ -43,7 +43,7 @@ const Login = () => {
     }
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.password,
       });
@@ -54,9 +54,24 @@ const Login = () => {
         } else {
           toast.error(error.message);
         }
-      } else {
+      } else if (authData.user) {
+        // Fetch user role to redirect appropriately
+        const { data: roleData } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", authData.user.id)
+          .single();
+
         toast.success("Welcome back!");
-        navigate("/");
+
+        // Redirect based on role
+        if (roleData?.role === "admin") {
+          navigate("/admin-dashboard");
+        } else if (roleData?.role === "provider") {
+          navigate("/provider-dashboard");
+        } else {
+          navigate("/browse-venues");
+        }
       }
     } catch (error) {
       toast.error("An unexpected error occurred. Please try again.");
