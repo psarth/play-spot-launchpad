@@ -70,7 +70,7 @@ const Login = () => {
         } else if (roleData?.role === "provider") {
           navigate("/provider-dashboard");
         } else {
-          navigate("/browse-venues");
+          navigate("/customer-dashboard");
         }
       }
     } catch (error) {
