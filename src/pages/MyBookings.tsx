@@ -93,65 +93,95 @@ const MyBookings = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-secondary/30">
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <h1 className="text-4xl font-bold mb-8">My Bookings</h1>
+      <main className="flex-1 container mx-auto px-4 py-12">
+        <h1 className="text-4xl font-bold mb-2">My Bookings</h1>
+        <p className="text-muted-foreground mb-8">View and manage your upcoming and past bookings</p>
 
         {loading ? (
-          <div className="text-center py-12">Loading bookings...</div>
-        ) : bookings.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground mb-4">You don't have any bookings yet.</p>
-            <Button onClick={() => navigate("/browse-venues")}>Browse Venues</Button>
+          <div className="text-center py-20">
+            <div className="inline-block h-8 w-8 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+            <p className="mt-4 text-muted-foreground">Loading bookings...</p>
           </div>
+        ) : bookings.length === 0 ? (
+          <Card className="text-center py-16">
+            <CardContent>
+              <p className="text-muted-foreground mb-6 text-lg">You don't have any bookings yet.</p>
+              <Button size="lg" onClick={() => navigate("/browse-venues")}>Browse Venues</Button>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-5">
             {bookings.map((booking) => (
-              <Card key={booking.id}>
-                <CardHeader>
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <CardTitle>{booking.venues.name}</CardTitle>
-                      <CardDescription className="flex items-center gap-1 mt-1">
+              <Card key={booking.id} className="overflow-hidden">
+                <CardHeader className="bg-secondary/50">
+                  <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+                    <div className="flex-1">
+                      <CardTitle className="text-xl">{booking.venues.name}</CardTitle>
+                      <CardDescription className="flex items-center gap-1.5 mt-2">
                         <MapPin className="h-4 w-4" />
                         {booking.venues.location}
                       </CardDescription>
                     </div>
-                    <Badge variant={getStatusColor(booking.status)}>
-                      {booking.status}
+                    <Badge 
+                      variant={getStatusColor(booking.status)} 
+                      className="text-sm px-4 py-1.5"
+                    >
+                      {booking.status.toUpperCase()}
                     </Badge>
                   </div>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-5 w-5 text-muted-foreground" />
-                      <span>{new Date(booking.booking_date).toLocaleDateString()}</span>
+                <CardContent className="pt-6">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Calendar className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Date</p>
+                        <p className="font-semibold">{new Date(booking.booking_date).toLocaleDateString()}</p>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-5 w-5 text-muted-foreground" />
-                      <span>
-                        {booking.start_time.slice(0, 5)} - {booking.end_time.slice(0, 5)}
-                      </span>
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <Clock className="h-5 w-5 text-primary" />
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Time</p>
+                        <p className="font-semibold">
+                          {booking.start_time.slice(0, 5)} - {booking.end_time.slice(0, 5)}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <span className="font-semibold">₹{booking.total_amount}</span>
-                      <span className="text-sm text-muted-foreground ml-2">
-                        ({booking.payment_status})
-                      </span>
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                        <span className="text-primary font-bold">₹</span>
+                      </div>
+                      <div>
+                        <p className="text-xs text-muted-foreground">Amount</p>
+                        <p className="font-semibold">
+                          ₹{booking.total_amount}
+                          <span className="text-xs text-muted-foreground ml-2">
+                            ({booking.payment_status})
+                          </span>
+                        </p>
+                      </div>
                     </div>
                   </div>
                   {booking.notes && (
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Notes: {booking.notes}
-                    </p>
+                    <div className="bg-muted/50 rounded-lg p-4 mb-4">
+                      <p className="text-sm text-muted-foreground">
+                        <span className="font-semibold text-foreground">Notes:</span> {booking.notes}
+                      </p>
+                    </div>
                   )}
                   {booking.status === "confirmed" && (
                     <Button
                       variant="destructive"
                       size="sm"
                       onClick={() => cancelBooking(booking.id)}
+                      className="rounded-lg"
                     >
                       Cancel Booking
                     </Button>

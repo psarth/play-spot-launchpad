@@ -133,108 +133,159 @@ const BookVenue = () => {
     setLoading(false);
   };
 
-  if (!venue) return <div>Loading...</div>;
+  if (!venue) return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="inline-block h-10 w-10 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
+    </div>
+  );
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-secondary/30">
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-8">
-        <Button variant="outline" onClick={() => navigate("/browse-venues")} className="mb-6">
+      <main className="flex-1 container mx-auto px-4 py-12">
+        <Button 
+          variant="outline" 
+          onClick={() => navigate("/browse-venues")} 
+          className="mb-8 rounded-xl"
+        >
           ← Back to Venues
         </Button>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          <div>
-            {venue.images && venue.images[0] && (
-              <img
-                src={venue.images[0]}
-                alt={venue.name}
-                className="w-full h-64 object-cover rounded-lg mb-4"
-              />
-            )}
-            <h1 className="text-3xl font-bold mb-2">{venue.name}</h1>
-            <p className="flex items-center gap-2 text-muted-foreground mb-4">
-              <MapPin className="h-5 w-5" />
-              {venue.location}
-            </p>
-            <p className="text-muted-foreground mb-4">{venue.description}</p>
-            <p className="text-2xl font-bold mb-4">₹{venue.price_per_hour}/hour</p>
-            {venue.amenities && venue.amenities.length > 0 && (
-              <div>
-                <h3 className="font-semibold mb-2">Amenities</h3>
-                <div className="flex flex-wrap gap-2">
-                  {venue.amenities.map((amenity, index) => (
-                    <span key={index} className="bg-secondary px-3 py-1 rounded">
-                      {amenity}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Book This Venue</CardTitle>
-              <CardDescription>Select date and time for your booking</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div>
-                <Label>Select Date</Label>
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={setSelectedDate}
-                  disabled={(date) => date < new Date()}
-                  className="rounded-md border"
-                />
-              </div>
-
-              {selectedDate && (
-                <div>
-                  <Label>Select Time Slot</Label>
-                  {timeSlots.length === 0 ? (
-                    <p className="text-sm text-muted-foreground mt-2">
-                      No available slots for this date
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
+          {/* Venue Details - Left Side */}
+          <div className="lg:col-span-3">
+            <Card className="overflow-hidden mb-6">
+              {venue.images && venue.images[0] && (
+                <div className="relative h-80 overflow-hidden">
+                  <img
+                    src={venue.images[0]}
+                    alt={venue.name}
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/95 to-transparent p-6">
+                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">{venue.name}</h1>
+                    <p className="flex items-center gap-2 text-white/90">
+                      <MapPin className="h-5 w-5" />
+                      {venue.location}
                     </p>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-2 mt-2">
-                      {timeSlots.map((slot) => (
-                        <Button
-                          key={slot.id}
-                          variant={selectedSlot === slot.id ? "default" : "outline"}
-                          onClick={() => setSelectedSlot(slot.id)}
-                          className="flex items-center gap-2"
-                        >
-                          <Clock className="h-4 w-4" />
-                          {slot.start_time.slice(0, 5)} - {slot.end_time.slice(0, 5)}
-                        </Button>
-                      ))}
-                    </div>
-                  )}
+                  </div>
                 </div>
               )}
+            </Card>
 
-              <div>
-                <Label htmlFor="notes">Additional Notes (Optional)</Label>
-                <Textarea
-                  id="notes"
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Any special requests or notes..."
-                  className="mt-2"
-                />
-              </div>
+            <Card>
+              <CardHeader>
+                <CardTitle>About This Venue</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <p className="text-muted-foreground leading-relaxed">
+                  {venue.description || "Premium sports facility with modern amenities."}
+                </p>
 
-              <Button
-                onClick={handleBooking}
-                disabled={!selectedDate || !selectedSlot || loading}
-                className="w-full"
-              >
-                {loading ? "Booking..." : "Confirm Booking"}
-              </Button>
-            </CardContent>
-          </Card>
+                <div className="flex items-center gap-4 p-4 bg-primary/5 rounded-xl border border-primary/20">
+                  <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <span className="text-2xl font-bold text-primary">₹</span>
+                  </div>
+                  <div>
+                    <p className="text-3xl font-bold text-primary">₹{venue.price_per_hour}</p>
+                    <p className="text-sm text-muted-foreground">per hour</p>
+                  </div>
+                </div>
+
+                {venue.amenities && venue.amenities.length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-lg mb-3">Amenities & Features</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      {venue.amenities.map((amenity, index) => (
+                        <div key={index} className="flex items-center gap-2 p-3 bg-secondary rounded-lg">
+                          <div className="h-2 w-2 rounded-full bg-primary"></div>
+                          <span className="text-sm">{amenity}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Booking Form - Right Side */}
+          <div className="lg:col-span-2">
+            <Card className="sticky top-24">
+              <CardHeader className="bg-gradient-to-r from-primary/10 to-accent/10">
+                <CardTitle className="text-2xl">Book This Venue</CardTitle>
+                <CardDescription>Select your preferred date and time slot</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6 pt-6">
+                <div>
+                  <Label className="text-base font-semibold mb-3 block">Select Date</Label>
+                  <Calendar
+                    mode="single"
+                    selected={selectedDate}
+                    onSelect={setSelectedDate}
+                    disabled={(date) => date < new Date()}
+                    className="rounded-xl border shadow-sm"
+                  />
+                </div>
+
+                {selectedDate && (
+                  <div>
+                    <Label className="text-base font-semibold mb-3 block">Available Time Slots</Label>
+                    {timeSlots.length === 0 ? (
+                      <div className="text-center py-8 bg-muted/50 rounded-lg">
+                        <Clock className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
+                        <p className="text-sm text-muted-foreground">
+                          No available slots for this date
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-2 gap-3">
+                        {timeSlots.map((slot) => (
+                          <Button
+                            key={slot.id}
+                            variant={selectedSlot === slot.id ? "default" : "outline"}
+                            onClick={() => setSelectedSlot(slot.id)}
+                            className="flex flex-col items-center gap-1 h-auto py-3 rounded-xl"
+                          >
+                            <Clock className="h-4 w-4" />
+                            <span className="text-xs font-semibold">
+                              {slot.start_time.slice(0, 5)}
+                            </span>
+                            <span className="text-xs opacity-70">to</span>
+                            <span className="text-xs font-semibold">
+                              {slot.end_time.slice(0, 5)}
+                            </span>
+                          </Button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div>
+                  <Label htmlFor="notes" className="text-base font-semibold">
+                    Additional Notes <span className="text-muted-foreground font-normal">(Optional)</span>
+                  </Label>
+                  <Textarea
+                    id="notes"
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    placeholder="Any special requests or requirements..."
+                    className="mt-2 rounded-xl min-h-[100px]"
+                  />
+                </div>
+
+                <Button
+                  onClick={handleBooking}
+                  disabled={!selectedDate || !selectedSlot || loading}
+                  className="w-full h-12 text-base font-semibold rounded-xl"
+                  size="lg"
+                >
+                  {loading ? "Processing..." : "Confirm & Book"}
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </main>
       <Footer />

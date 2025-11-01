@@ -98,36 +98,43 @@ const MyProfile = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-secondary/30">
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-24">
-        <h1 className="text-4xl font-bold mb-8">My Profile</h1>
+      <main className="flex-1 container mx-auto px-4 py-12">
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold mb-2">My Profile</h1>
+          <p className="text-muted-foreground">Manage your account information</p>
+        </div>
 
         <div className="max-w-2xl">
           <Card>
-            <CardHeader>
-              <CardTitle>Profile Information</CardTitle>
-              <CardDescription>View and manage your account details</CardDescription>
+            <CardHeader className="bg-gradient-to-r from-primary/10 to-accent/10">
+              <CardTitle className="text-2xl">Profile Information</CardTitle>
+              <CardDescription>View and update your personal details</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
-                <Mail className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <Label className="text-xs text-muted-foreground">Email</Label>
-                  <p className="text-sm font-medium">{profile.email}</p>
+            <CardContent className="space-y-6 pt-6">
+              <div className="flex items-center gap-4 p-4 bg-secondary/50 rounded-xl">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Mail className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <Label className="text-xs text-muted-foreground">Email Address</Label>
+                  <p className="text-base font-semibold">{profile.email}</p>
                 </div>
               </div>
 
-              <div className="flex items-center gap-3 p-3 bg-secondary/50 rounded-lg">
-                <Shield className="w-5 h-5 text-muted-foreground" />
-                <div>
-                  <Label className="text-xs text-muted-foreground">Role</Label>
-                  <p className="text-sm font-medium capitalize">{profile.role}</p>
+              <div className="flex items-center gap-4 p-4 bg-secondary/50 rounded-xl">
+                <div className="h-12 w-12 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Shield className="w-6 h-6 text-primary" />
+                </div>
+                <div className="flex-1">
+                  <Label className="text-xs text-muted-foreground">Account Role</Label>
+                  <p className="text-base font-semibold capitalize">{profile.role}</p>
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="full_name">
+              <div className="space-y-3">
+                <Label htmlFor="full_name" className="text-base">
                   <User className="w-4 h-4 inline mr-2" />
                   Full Name
                 </Label>
@@ -136,33 +143,35 @@ const MyProfile = () => {
                   value={formData.full_name}
                   onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                   disabled={!editing}
+                  className="h-12 rounded-xl"
                 />
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="phone">
+              <div className="space-y-3">
+                <Label htmlFor="phone" className="text-base">
                   <Phone className="w-4 h-4 inline mr-2" />
-                  Phone
+                  Phone Number
                 </Label>
                 <Input
                   id="phone"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                   disabled={!editing}
+                  className="h-12 rounded-xl"
                 />
               </div>
 
-              <div className="flex gap-3 pt-4">
+              <div className="flex gap-3 pt-6 border-t">
                 {!editing ? (
-                  <Button onClick={() => setEditing(true)} variant="hero">
+                  <Button onClick={() => setEditing(true)} size="lg" className="rounded-xl">
                     Edit Profile
                   </Button>
                 ) : (
                   <>
-                    <Button onClick={handleUpdate} variant="hero">
+                    <Button onClick={handleUpdate} size="lg" className="rounded-xl">
                       Save Changes
                     </Button>
-                    <Button onClick={() => setEditing(false)} variant="outline">
+                    <Button onClick={() => setEditing(false)} variant="outline" size="lg" className="rounded-xl">
                       Cancel
                     </Button>
                   </>
