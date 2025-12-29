@@ -4,10 +4,25 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, User, Building2, Copy, Check } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { loginSchema, type LoginFormData } from "@/lib/validations";
+
+const sampleCredentials = {
+  customer: {
+    email: "customer@sportspot.com",
+    password: "customer123",
+    label: "Customer",
+    icon: User,
+  },
+  provider: {
+    email: "provider@sportspot.com",
+    password: "provider123",
+    label: "Provider",
+    icon: Building2,
+  },
+};
 
 const Login = () => {
   const navigate = useNavigate();
@@ -17,10 +32,19 @@ const Login = () => {
   });
   const [errors, setErrors] = useState<Partial<Record<keyof LoginFormData, string>>>({});
   const [loading, setLoading] = useState(false);
+  const [copiedField, setCopiedField] = useState<string | null>(null);
 
   const handleChange = (field: keyof LoginFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
+  };
+
+  const handleCopyCredentials = (type: "customer" | "provider") => {
+    const creds = sampleCredentials[type];
+    setFormData({ email: creds.email, password: creds.password });
+    setCopiedField(type);
+    toast.success(`${creds.label} credentials filled`);
+    setTimeout(() => setCopiedField(null), 2000);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -28,7 +52,6 @@ const Login = () => {
     setErrors({});
     setLoading(true);
 
-    // Validate form data
     const validation = loginSchema.safeParse(formData);
     if (!validation.success) {
       const fieldErrors: Partial<Record<keyof LoginFormData, string>> = {};
@@ -55,7 +78,6 @@ const Login = () => {
           toast.error(error.message);
         }
       } else if (authData.user) {
-        // Fetch user role to redirect appropriately
         const { data: roleData } = await supabase
           .from("user_roles")
           .select("role")
@@ -64,7 +86,6 @@ const Login = () => {
 
         toast.success("Welcome back!");
 
-        // Redirect based on role
         if (roleData?.role === "admin") {
           navigate("/admin-dashboard");
         } else if (roleData?.role === "provider") {
@@ -81,7 +102,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-muted p-4">
       <div className="w-full max-w-md animate-fade-in">
         <Link
           to="/"
@@ -91,16 +112,54 @@ const Login = () => {
           Back to Home
         </Link>
 
-        <Card className="border-border shadow-[var(--shadow-glow)]">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-3xl font-bold text-center">Welcome Back</CardTitle>
+        <Card className="border-border shadow-xl">
+          <CardHeader className="space-y-1 pb-4">
+            <div className="flex justify-center mb-2">
+              <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-xl">S</span>
+              </div>
+            </div>
+            <CardTitle className="text-2xl font-bold text-center">Welcome Back</CardTitle>
             <CardDescription className="text-center">
               Log in to your SportSpot account
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {/* Sample Credentials Section */}
+            <div className="mb-6 p-4 bg-muted rounded-xl border border-border">
+              <p className="text-xs font-medium text-muted-foreground mb-3 text-center">
+                Demo Credentials - Click to auto-fill
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {(["customer", "provider"] as const).map((type) => {
+                  const creds = sampleCredentials[type];
+                  const Icon = creds.icon;
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => handleCopyCredentials(type)}
+                      className="flex items-center gap-2 p-3 rounded-lg border border-border bg-card hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                        <Icon className="w-4 h-4 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground">{creds.label}</p>
+                        <p className="text-xs text-muted-foreground truncate">{creds.email}</p>
+                      </div>
+                      {copiedField === type ? (
+                        <Check className="w-4 h-4 text-green-500" />
+                      ) : (
+                        <Copy className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-4">
-              {/* Email */}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -114,7 +173,6 @@ const Login = () => {
                 {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
               </div>
 
-              {/* Password */}
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
@@ -138,10 +196,9 @@ const Login = () => {
                 )}
               </div>
 
-              {/* Submit Button */}
               <Button
                 type="submit"
-                variant="hero"
+                variant="default"
                 size="lg"
                 className="w-full"
                 disabled={loading}
@@ -149,7 +206,6 @@ const Login = () => {
                 {loading ? "Logging in..." : "Log In"}
               </Button>
 
-              {/* Signup Link */}
               <p className="text-center text-sm text-muted-foreground">
                 Don't have an account?{" "}
                 <Link to="/signup" className="text-primary hover:underline font-medium">
