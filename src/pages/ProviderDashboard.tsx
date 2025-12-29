@@ -58,65 +58,65 @@ const ProviderDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-secondary/30">
+    <div className="min-h-screen flex flex-col bg-muted">
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-12">
-        <div className="mb-10">
-          <h1 className="text-4xl md:text-5xl font-bold mb-3">Provider Dashboard</h1>
-          <p className="text-muted-foreground text-lg">Manage your venues and bookings</p>
+      <main className="flex-1 container mx-auto px-4 sm:px-6 py-8 sm:py-12 pt-24">
+        <div className="mb-8 sm:mb-10">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-3">Provider Dashboard</h1>
+          <p className="text-muted-foreground text-base sm:text-lg">Manage your venues and bookings</p>
         </div>
 
         {/* Summary Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <Card className="bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
-            <CardContent className="pt-6">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
+          <Card className="bg-card border-border">
+            <CardContent className="pt-5 sm:pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Today's Bookings</p>
-                  <p className="text-3xl font-bold text-primary">0</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-1">Today's Bookings</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-primary">0</p>
                 </div>
-                <div className="h-14 w-14 rounded-xl bg-primary/20 flex items-center justify-center">
-                  <Clock className="h-7 w-7 text-primary" />
+                <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Clock className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-accent/10 to-accent/5 border-accent/20">
-            <CardContent className="pt-6">
+          <Card className="bg-card border-border">
+            <CardContent className="pt-5 sm:pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Pending Requests</p>
-                  <p className="text-3xl font-bold text-accent">0</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-1">Pending Requests</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-primary">0</p>
                 </div>
-                <div className="h-14 w-14 rounded-xl bg-accent/20 flex items-center justify-center">
-                  <Clock className="h-7 w-7 text-accent" />
+                <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Clock className="h-6 w-6 sm:h-7 sm:w-7 text-primary" />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
-            <CardContent className="pt-6">
+          <Card className="bg-card border-border">
+            <CardContent className="pt-5 sm:pt-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Total Earnings</p>
-                  <p className="text-3xl font-bold text-green-600 dark:text-green-400">₹0</p>
+                  <p className="text-xs sm:text-sm text-muted-foreground mb-1">Total Earnings</p>
+                  <p className="text-2xl sm:text-3xl font-bold text-green-600 dark:text-green-400">₹0</p>
                 </div>
-                <div className="h-14 w-14 rounded-xl bg-green-500/20 flex items-center justify-center">
-                  <span className="text-2xl font-bold text-green-600 dark:text-green-400">₹</span>
+                <div className="h-12 w-12 sm:h-14 sm:w-14 rounded-xl bg-green-500/10 flex items-center justify-center">
+                  <span className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">₹</span>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <Tabs defaultValue="bookings" className="space-y-6">
-          <TabsList className="bg-card border h-12 p-1 rounded-xl">
-            <TabsTrigger value="bookings" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+        <Tabs defaultValue="bookings" className="space-y-4 sm:space-y-6">
+          <TabsList className="bg-card border h-10 sm:h-12 p-1 rounded-xl w-full sm:w-auto">
+            <TabsTrigger value="bookings" className="rounded-lg text-xs sm:text-sm px-3 sm:px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               Manage Bookings
             </TabsTrigger>
-            <TabsTrigger value="venues" className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+            <TabsTrigger value="venues" className="rounded-lg text-xs sm:text-sm px-3 sm:px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
               My Venues
             </TabsTrigger>
           </TabsList>

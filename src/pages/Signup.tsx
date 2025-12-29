@@ -81,7 +81,7 @@ const Signup = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-secondary/30 to-background p-4">
+    <div className="min-h-screen flex items-center justify-center bg-muted p-4">
       <div className="w-full max-w-md animate-fade-in">
         <Link
           to="/"
@@ -91,9 +91,14 @@ const Signup = () => {
           Back to Home
         </Link>
 
-        <Card className="border-border shadow-[var(--shadow-glow)]">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-3xl font-bold text-center">Create Account</CardTitle>
+        <Card className="border-border shadow-xl">
+          <CardHeader className="space-y-1 pb-4">
+            <div className="flex justify-center mb-2">
+              <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
+                <span className="text-primary-foreground font-bold text-xl">S</span>
+              </div>
+            </div>
+            <CardTitle className="text-2xl font-bold text-center">Create Account</CardTitle>
             <CardDescription className="text-center">
               Join SportSpot to start booking venues
             </CardDescription>
