@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowLeft, User, Building2, Copy, Check } from "lucide-react";
+import { ArrowLeft, User, Building2, Copy, Check, Shield } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { loginSchema, type LoginFormData } from "@/lib/validations";
@@ -12,15 +12,21 @@ import { loginSchema, type LoginFormData } from "@/lib/validations";
 const sampleCredentials = {
   customer: {
     email: "customer@sportspot.com",
-    password: "customer123",
+    password: "Customer@123",
     label: "Customer",
     icon: User,
   },
   provider: {
     email: "provider@sportspot.com",
-    password: "provider123",
+    password: "Provider@123",
     label: "Provider",
     icon: Building2,
+  },
+  admin: {
+    email: "admin@sportspot.com",
+    password: "Admin@123",
+    label: "Admin",
+    icon: Shield,
   },
 };
 
@@ -33,18 +39,35 @@ const Login = () => {
   const [errors, setErrors] = useState<Partial<Record<keyof LoginFormData, string>>>({});
   const [loading, setLoading] = useState(false);
   const [copiedField, setCopiedField] = useState<string | null>(null);
+  const [settingUpDemo, setSettingUpDemo] = useState(false);
 
   const handleChange = (field: keyof LoginFormData, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: undefined }));
   };
 
-  const handleCopyCredentials = (type: "customer" | "provider") => {
+  const handleCopyCredentials = (type: "customer" | "provider" | "admin") => {
     const creds = sampleCredentials[type];
     setFormData({ email: creds.email, password: creds.password });
     setCopiedField(type);
     toast.success(`${creds.label} credentials filled`);
     setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const setupDemoUsers = async () => {
+    setSettingUpDemo(true);
+    try {
+      const response = await supabase.functions.invoke("seed-demo-users");
+      if (response.error) {
+        toast.error("Failed to setup demo users: " + response.error.message);
+      } else {
+        toast.success("Demo users created successfully! You can now login.");
+      }
+    } catch (error) {
+      toast.error("Failed to setup demo users");
+    } finally {
+      setSettingUpDemo(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -130,8 +153,8 @@ const Login = () => {
               <p className="text-xs font-medium text-muted-foreground mb-3 text-center">
                 Demo Credentials - Click to auto-fill
               </p>
-              <div className="grid grid-cols-2 gap-2">
-                {(["customer", "provider"] as const).map((type) => {
+              <div className="grid grid-cols-3 gap-2 mb-3">
+                {(["customer", "provider", "admin"] as const).map((type) => {
                   const creds = sampleCredentials[type];
                   const Icon = creds.icon;
                   return (
@@ -139,24 +162,31 @@ const Login = () => {
                       key={type}
                       type="button"
                       onClick={() => handleCopyCredentials(type)}
-                      className="flex items-center gap-2 p-3 rounded-lg border border-border bg-card hover:border-primary hover:bg-primary/5 transition-all text-left group"
+                      className="flex flex-col items-center gap-2 p-3 rounded-lg border border-border bg-card hover:border-primary hover:bg-primary/5 transition-all text-center group"
                     >
-                      <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                        <Icon className="w-4 h-4 text-primary" />
+                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                        <Icon className="w-5 h-5 text-primary" />
                       </div>
-                      <div className="flex-1 min-w-0">
+                      <div className="min-w-0">
                         <p className="text-sm font-medium text-foreground">{creds.label}</p>
-                        <p className="text-xs text-muted-foreground truncate">{creds.email}</p>
                       </div>
-                      {copiedField === type ? (
+                      {copiedField === type && (
                         <Check className="w-4 h-4 text-green-500" />
-                      ) : (
-                        <Copy className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                       )}
                     </button>
                   );
                 })}
               </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-full text-xs"
+                onClick={setupDemoUsers}
+                disabled={settingUpDemo}
+              >
+                {settingUpDemo ? "Setting up..." : "Setup Demo Users (First time only)"}
+              </Button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">

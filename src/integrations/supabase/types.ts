@@ -77,11 +77,54 @@ export type Database = {
           },
         ]
       }
+      payments: {
+        Row: {
+          amount: number
+          booking_id: string | null
+          created_at: string
+          id: string
+          payment_method: string | null
+          status: string
+          transaction_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          payment_method?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: string | null
+          created_at?: string
+          id?: string
+          payment_method?: string | null
+          status?: string
+          transaction_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
           full_name: string
           id: string
+          is_approved: boolean | null
+          is_suspended: boolean | null
           phone: string | null
           updated_at: string
         }
@@ -89,6 +132,8 @@ export type Database = {
           created_at?: string
           full_name: string
           id: string
+          is_approved?: boolean | null
+          is_suspended?: boolean | null
           phone?: string | null
           updated_at?: string
         }
@@ -96,6 +141,8 @@ export type Database = {
           created_at?: string
           full_name?: string
           id?: string
+          is_approved?: boolean | null
+          is_suspended?: boolean | null
           phone?: string | null
           updated_at?: string
         }
