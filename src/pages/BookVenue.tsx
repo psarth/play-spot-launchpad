@@ -107,6 +107,7 @@ const BookVenue = () => {
     const hours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
     const totalAmount = venue.price_per_hour * hours;
 
+    // Create booking with demo payment
     const { data, error } = await supabase
       .from("bookings")
       .insert({
@@ -118,7 +119,8 @@ const BookVenue = () => {
         total_amount: totalAmount,
         notes: notes || null,
         status: "confirmed",
-        payment_status: "pending",
+        payment_status: "completed", // Demo payment auto-completes
+        payment_intent_id: `demo_${Date.now()}`, // Demo payment ID
       })
       .select()
       .single();
@@ -126,7 +128,25 @@ const BookVenue = () => {
     if (error) {
       toast({ title: "Booking failed", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Booking successful!", description: "Your booking has been confirmed." });
+      // Also create a payment record
+      await supabase.from("payments").insert({
+        booking_id: data.id,
+        amount: totalAmount,
+        status: "completed",
+        payment_method: "demo",
+        transaction_id: `demo_txn_${Date.now()}`,
+      });
+
+      // Mark the time slot as unavailable
+      await supabase
+        .from("time_slots")
+        .update({ is_available: false })
+        .eq("id", selectedSlot);
+
+      toast({ 
+        title: "Booking Confirmed! 🎉", 
+        description: `Payment of ₹${totalAmount} completed successfully.` 
+      });
       navigate("/my-bookings");
     }
 
@@ -281,8 +301,11 @@ const BookVenue = () => {
                   className="w-full h-12 text-base font-semibold rounded-xl"
                   size="lg"
                 >
-                  {loading ? "Processing..." : "Confirm & Book"}
+                  {loading ? "Processing Payment..." : "Pay & Confirm Booking"}
                 </Button>
+                <p className="text-xs text-center text-muted-foreground mt-2">
+                  Demo payment - No actual charges
+                </p>
               </CardContent>
             </Card>
           </div>
