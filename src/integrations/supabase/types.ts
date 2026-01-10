@@ -148,6 +148,54 @@ export type Database = {
         }
         Relationships: []
       }
+      reviews: {
+        Row: {
+          booking_id: string
+          comment: string | null
+          created_at: string
+          customer_id: string
+          id: string
+          rating: number
+          updated_at: string
+          venue_id: string
+        }
+        Insert: {
+          booking_id: string
+          comment?: string | null
+          created_at?: string
+          customer_id: string
+          id?: string
+          rating: number
+          updated_at?: string
+          venue_id: string
+        }
+        Update: {
+          booking_id?: string
+          comment?: string | null
+          created_at?: string
+          customer_id?: string
+          id?: string
+          rating?: number
+          updated_at?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sports: {
         Row: {
           created_at: string
@@ -276,6 +324,7 @@ export type Database = {
         Row: {
           address: string | null
           amenities: string[] | null
+          average_rating: number | null
           created_at: string
           description: string | null
           id: string
@@ -286,11 +335,13 @@ export type Database = {
           price_per_hour: number
           provider_id: string
           sport_id: string
+          total_reviews: number | null
           updated_at: string
         }
         Insert: {
           address?: string | null
           amenities?: string[] | null
+          average_rating?: number | null
           created_at?: string
           description?: string | null
           id?: string
@@ -301,11 +352,13 @@ export type Database = {
           price_per_hour: number
           provider_id: string
           sport_id: string
+          total_reviews?: number | null
           updated_at?: string
         }
         Update: {
           address?: string | null
           amenities?: string[] | null
+          average_rating?: number | null
           created_at?: string
           description?: string | null
           id?: string
@@ -316,6 +369,7 @@ export type Database = {
           price_per_hour?: number
           provider_id?: string
           sport_id?: string
+          total_reviews?: number | null
           updated_at?: string
         }
         Relationships: [
