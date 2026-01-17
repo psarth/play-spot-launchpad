@@ -15,7 +15,7 @@ const Hero = () => {
           alt="People playing various sports in modern facility"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-primary-deep/95 via-primary/85 to-primary/75"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-[hsl(220,40%,12%)]/95 via-[hsl(220,35%,18%)]/85 to-primary/40"></div>
       </div>
 
       {/* Content */}

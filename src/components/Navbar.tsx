@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Menu, User, Calendar, LogOut, RefreshCw, Home, Building2, Shield } from "lucide-react";
+import { Menu, User, Calendar, LogOut, Home, Building2, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
@@ -11,7 +11,6 @@ const Navbar = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const navigate = useNavigate();
-  const location = useLocation();
 
   useEffect(() => {
     checkAuth();
@@ -52,7 +51,7 @@ const Navbar = () => {
   const getDashboardLink = () => {
     if (userRole === "admin") return "/admin-dashboard";
     if (userRole === "provider") return "/provider-dashboard";
-    return "/browse-venues";
+    return "/customer-dashboard";
   };
 
   const getRoleIcon = () => {
@@ -64,8 +63,11 @@ const Navbar = () => {
   const getRoleLabel = () => {
     if (userRole === "admin") return "Admin Dashboard";
     if (userRole === "provider") return "Provider Dashboard";
-    return "Browse Venues";
+    return "My Dashboard";
   };
+
+  // Only customers see Browse and My Bookings
+  const isCustomer = userRole === "customer" || !userRole;
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
@@ -73,7 +75,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <a href="/" className="flex items-center space-x-2">
-            <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center">
+            <div className="w-9 h-9 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-md">
               <span className="text-primary-foreground font-bold text-lg">S</span>
             </div>
             <span className="text-xl font-bold text-foreground">
@@ -107,18 +109,23 @@ const Navbar = () => {
             </>
           ) : (
             <div className="hidden md:flex items-center gap-4">
-              <Button variant="ghost" size="sm" asChild>
-                <a href="/browse-venues">
-                  <Home className="w-4 h-4 mr-2" />
-                  Browse
-                </a>
-              </Button>
-              <Button variant="ghost" size="sm" asChild>
-                <a href="/my-bookings">
-                  <Calendar className="w-4 h-4 mr-2" />
-                  My Bookings
-                </a>
-              </Button>
+              {/* Only show Browse for customers */}
+              {isCustomer && (
+                <>
+                  <Button variant="ghost" size="sm" asChild>
+                    <a href="/browse-venues">
+                      <Home className="w-4 h-4 mr-2" />
+                      Browse
+                    </a>
+                  </Button>
+                  <Button variant="ghost" size="sm" asChild>
+                    <a href="/my-bookings">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      My Bookings
+                    </a>
+                  </Button>
+                </>
+              )}
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -180,18 +187,23 @@ const Navbar = () => {
               </>
             ) : (
               <div className="flex flex-col gap-2">
-                <Button variant="ghost" className="w-full justify-start" asChild>
-                  <a href="/browse-venues">
-                    <Home className="w-4 h-4 mr-2" />
-                    Browse Venues
-                  </a>
-                </Button>
-                <Button variant="ghost" className="w-full justify-start" asChild>
-                  <a href="/my-bookings">
-                    <Calendar className="w-4 h-4 mr-2" />
-                    My Bookings
-                  </a>
-                </Button>
+                {/* Only show Browse & My Bookings for customers */}
+                {isCustomer && (
+                  <>
+                    <Button variant="ghost" className="w-full justify-start" asChild>
+                      <a href="/browse-venues">
+                        <Home className="w-4 h-4 mr-2" />
+                        Browse Venues
+                      </a>
+                    </Button>
+                    <Button variant="ghost" className="w-full justify-start" asChild>
+                      <a href="/my-bookings">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        My Bookings
+                      </a>
+                    </Button>
+                  </>
+                )}
                 <Button variant="ghost" className="w-full justify-start" onClick={() => navigate(getDashboardLink())}>
                   {getRoleIcon()}
                   <span className="ml-2">{getRoleLabel()}</span>
