@@ -167,7 +167,7 @@ const BookVenue = () => {
         total_amount: totalAmount,
         notes: notes || null,
         status: "pending_confirmation",
-        payment_status: "pending_verification",
+        payment_status: "pending",
       })
       .select()
       .single();
