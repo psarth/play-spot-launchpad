@@ -127,9 +127,7 @@ const MyBookings = () => {
 
   const getStatusMessage = (status: string) => {
     switch (status) {
-      case "pending_payment":
-        return "Complete your UPI payment to proceed.";
-      case "pending_confirmation":
+      case "pending":
         return "Payment submitted. Waiting for venue owner to verify.";
       case "confirmed":
         return "Your booking is confirmed. See you there!";
@@ -170,13 +168,11 @@ const MyBookings = () => {
         {getStatusMessage(booking.status) && (
           <div className={`flex items-center gap-2 p-3 rounded-lg mb-4 text-sm ${
             booking.status === "confirmed" ? "bg-success/10 text-success" :
-            booking.status === "pending_confirmation" ? "bg-primary/10 text-primary" :
-            booking.status === "pending_payment" ? "bg-warning/10 text-warning" :
+            booking.status === "pending" ? "bg-warning/10 text-warning" :
             "bg-muted text-muted-foreground"
           }`}>
             {booking.status === "confirmed" && <CheckCircle className="h-4 w-4" />}
-            {booking.status === "pending_confirmation" && <Clock className="h-4 w-4" />}
-            {booking.status === "pending_payment" && <Smartphone className="h-4 w-4" />}
+            {booking.status === "pending" && <Clock className="h-4 w-4" />}
             {getStatusMessage(booking.status)}
           </div>
         )}
@@ -223,7 +219,7 @@ const MyBookings = () => {
 
         <div className="flex flex-wrap gap-2">
           {/* Receipt Button - show for confirmed/completed bookings */}
-          {(booking.status === "confirmed" || booking.payment_status === "completed") && (
+          {(booking.status === "confirmed" || booking.payment_status === "paid") && (
             <Button
               variant="outline"
               size="sm"
@@ -249,7 +245,7 @@ const MyBookings = () => {
           )}
 
           {/* Cancel Button - only for pending or confirmed bookings */}
-          {!showReviewButton && (booking.status === "confirmed" || booking.status === "pending_confirmation") && (
+          {!showReviewButton && (booking.status === "confirmed" || booking.status === "pending") && (
             <Button
               variant="destructive"
               size="sm"

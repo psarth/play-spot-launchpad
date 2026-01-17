@@ -141,7 +141,7 @@ const BookingManagement = () => {
   const confirmBooking = async (bookingId: string) => {
     const { error } = await supabase
       .from("bookings")
-      .update({ status: "confirmed", payment_status: "completed" })
+      .update({ status: "confirmed", payment_status: "paid" })
       .eq("id", bookingId);
 
     if (error) {
@@ -167,7 +167,7 @@ const BookingManagement = () => {
     }
   };
 
-  const pendingCount = bookings.filter(b => b.status === "pending_confirmation").length;
+  const pendingCount = bookings.filter(b => b.status === "pending").length;
 
   if (loading) {
     return (
@@ -208,7 +208,7 @@ const BookingManagement = () => {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending_confirmation">⏳ Pending Confirmation</SelectItem>
+                <SelectItem value="pending">⏳ Pending Verification</SelectItem>
                 <SelectItem value="confirmed">✅ Confirmed</SelectItem>
                 <SelectItem value="cancelled">❌ Cancelled</SelectItem>
               </SelectContent>
@@ -238,7 +238,7 @@ const BookingManagement = () => {
               </TableHeader>
               <TableBody>
                 {filteredBookings.map((booking) => (
-                  <TableRow key={booking.id} className={booking.status === "pending_confirmation" ? "bg-warning/5" : ""}>
+                  <TableRow key={booking.id} className={booking.status === "pending" ? "bg-warning/5" : ""}>
                     <TableCell>
                       <div>
                         <p className="font-medium">{booking.venue_name}</p>
@@ -254,7 +254,7 @@ const BookingManagement = () => {
                     </TableCell>
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-2">
-                        {booking.status === "pending_confirmation" && (
+                        {booking.status === "pending" && (
                           <>
                             <Button
                               variant="default"
@@ -275,7 +275,7 @@ const BookingManagement = () => {
                             </Button>
                           </>
                         )}
-                        {booking.status !== "cancelled" && booking.status !== "pending_confirmation" && (
+                        {booking.status !== "cancelled" && booking.status !== "pending" && (
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">

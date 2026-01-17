@@ -91,7 +91,7 @@ const BookVenue = () => {
       .select("start_time, end_time")
       .eq("venue_id", venueId)
       .eq("booking_date", dateStr)
-      .in("status", ["confirmed", "pending_confirmation", "pending_payment"]);
+      .in("status", ["confirmed", "pending"]);
 
     // Generate slots from 6 AM to 10 PM (1-hour slots)
     const slots: GeneratedSlot[] = [];
@@ -155,7 +155,7 @@ const BookVenue = () => {
 
     const totalAmount = venue.price_per_hour;
 
-    // Create booking with pending_confirmation status
+    // Create booking with pending status (awaiting payment verification)
     const { data, error } = await supabase
       .from("bookings")
       .insert({
@@ -166,7 +166,7 @@ const BookVenue = () => {
         end_time: selectedSlot.end_time,
         total_amount: totalAmount,
         notes: notes || null,
-        status: "pending_confirmation",
+        status: "pending",
         payment_status: "pending",
       })
       .select()
