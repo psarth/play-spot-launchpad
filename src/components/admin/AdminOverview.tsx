@@ -8,7 +8,6 @@ import {
   IndianRupee,
   AlertCircle,
   UserCheck,
-  UserX,
   Calendar,
   CheckCircle
 } from "lucide-react";
@@ -33,7 +32,7 @@ interface Stats {
   activeUsers: number;
   suspendedUsers: number;
   todayBookings: number;
-  pendingConfirmation: number;
+  pendingVerification: number;
   confirmedBookings: number;
 }
 
@@ -43,11 +42,9 @@ interface BookingsByStatus {
 }
 
 const statusLabels: Record<string, string> = {
-  pending_payment: "Pending Payment",
-  pending_confirmation: "Pending Confirmation",
+  pending: "Pending Verification",
   confirmed: "Confirmed",
   cancelled: "Cancelled",
-  pending: "Pending",
   completed: "Completed",
 };
 
@@ -60,7 +57,7 @@ const AdminOverview = () => {
     activeUsers: 0,
     suspendedUsers: 0,
     todayBookings: 0,
-    pendingConfirmation: 0,
+    pendingVerification: 0,
     confirmedBookings: 0,
   });
   const [bookingsByStatus, setBookingsByStatus] = useState<BookingsByStatus[]>([]);
@@ -87,7 +84,7 @@ const AdminOverview = () => {
 
       const today = new Date().toISOString().split("T")[0];
       const todayBookings = bookings?.filter(b => b.booking_date === today).length || 0;
-      const pendingConfirmation = bookings?.filter(b => b.status === "pending_confirmation").length || 0;
+      const pendingVerification = bookings?.filter(b => b.status === "pending").length || 0;
       const confirmedBookings = bookings?.filter(b => b.status === "confirmed").length || 0;
 
       const statusCounts: Record<string, number> = {};
@@ -116,7 +113,7 @@ const AdminOverview = () => {
         activeUsers: active,
         suspendedUsers: suspended,
         todayBookings,
-        pendingConfirmation,
+        pendingVerification,
         confirmedBookings,
       });
       setBookingsByStatus(statusData);
@@ -128,7 +125,7 @@ const AdminOverview = () => {
     }
   };
 
-  const COLORS = ["hsl(145, 63%, 42%)", "hsl(38, 92%, 50%)", "hsl(0, 84%, 60%)", "hsl(200, 18%, 46%)"];
+  const COLORS = ["hsl(24, 95%, 53%)", "hsl(145, 70%, 45%)", "hsl(0, 84%, 60%)", "hsl(220, 70%, 50%)"];
 
   const statCards = [
     { title: "Total Customers", value: stats.totalCustomers, icon: Users, color: "text-blue-500", bg: "bg-blue-500/10" },
@@ -136,7 +133,7 @@ const AdminOverview = () => {
     { title: "Total Bookings", value: stats.totalBookings, icon: CalendarDays, color: "text-primary", bg: "bg-primary/10" },
     { title: "Confirmed Revenue", value: `₹${stats.totalRevenue.toLocaleString()}`, icon: IndianRupee, color: "text-success", bg: "bg-success/10" },
     { title: "Confirmed Bookings", value: stats.confirmedBookings, icon: CheckCircle, color: "text-success", bg: "bg-success/10" },
-    { title: "Pending Verification", value: stats.pendingConfirmation, icon: AlertCircle, color: "text-warning", bg: "bg-warning/10" },
+    { title: "Pending Verification", value: stats.pendingVerification, icon: AlertCircle, color: "text-warning", bg: "bg-warning/10" },
     { title: "Today's Bookings", value: stats.todayBookings, icon: Calendar, color: "text-cyan-500", bg: "bg-cyan-500/10" },
     { title: "Active Users", value: stats.activeUsers, icon: UserCheck, color: "text-emerald-500", bg: "bg-emerald-500/10" },
   ];
@@ -152,13 +149,13 @@ const AdminOverview = () => {
   return (
     <div className="space-y-6">
       {/* Alert for pending verification */}
-      {stats.pendingConfirmation > 0 && (
+      {stats.pendingVerification > 0 && (
         <div className="p-4 bg-warning/10 border border-warning/30 rounded-xl flex items-center gap-3">
           <AlertCircle className="h-5 w-5 text-warning" />
           <div>
             <p className="font-semibold text-warning">Action Required</p>
             <p className="text-sm text-muted-foreground">
-              {stats.pendingConfirmation} booking(s) are waiting for payment verification. Go to Bookings tab to verify.
+              {stats.pendingVerification} booking(s) are waiting for payment verification. Go to Bookings tab to verify.
             </p>
           </div>
         </div>
@@ -204,7 +201,7 @@ const AdminOverview = () => {
                     }}
                     formatter={(value: number) => [`₹${value.toLocaleString()}`, "Revenue"]}
                   />
-                  <Bar dataKey="revenue" fill="hsl(145, 63%, 42%)" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="revenue" fill="hsl(24, 95%, 53%)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (

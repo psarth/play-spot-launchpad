@@ -91,7 +91,7 @@ const ManageBookings = () => {
       .from("bookings")
       .update({ 
         status: "confirmed",
-        payment_status: "completed" 
+        payment_status: "paid" 
       })
       .eq("id", bookingId);
 
@@ -123,17 +123,17 @@ const ManageBookings = () => {
     }
   };
 
-  const pendingConfirmationCount = bookings.filter(b => b.status === "pending_confirmation").length;
+  const pendingCount = bookings.filter(b => b.status === "pending").length;
 
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
           <h2 className="text-2xl font-bold">Manage Bookings</h2>
-          {pendingConfirmationCount > 0 && (
+          {pendingCount > 0 && (
             <p className="text-warning text-sm mt-1 flex items-center gap-1">
               <AlertCircle className="h-4 w-4" />
-              {pendingConfirmationCount} booking(s) awaiting payment verification
+              {pendingCount} booking(s) awaiting payment verification
             </p>
           )}
         </div>
@@ -143,7 +143,7 @@ const ManageBookings = () => {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Bookings</SelectItem>
-            <SelectItem value="pending_confirmation">⏳ Pending Confirmation</SelectItem>
+            <SelectItem value="pending">⏳ Pending Verification</SelectItem>
             <SelectItem value="confirmed">✅ Confirmed</SelectItem>
             <SelectItem value="cancelled">❌ Cancelled</SelectItem>
           </SelectContent>
@@ -166,7 +166,7 @@ const ManageBookings = () => {
       ) : (
         <div className="space-y-4">
           {filteredBookings.map((booking) => (
-            <Card key={booking.id} className={`overflow-hidden ${booking.status === "pending_confirmation" ? "border-warning/50 bg-warning/5" : ""}`}>
+            <Card key={booking.id} className={`overflow-hidden ${booking.status === "pending" ? "border-warning/50 bg-warning/5" : ""}`}>
               <CardHeader className="pb-3">
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
                   <div>
@@ -244,7 +244,7 @@ const ManageBookings = () => {
                 )}
 
                 {/* Action Buttons */}
-                {booking.status === "pending_confirmation" && (
+                {booking.status === "pending" && (
                   <div className="flex flex-col sm:flex-row gap-3 p-4 bg-warning/10 rounded-lg border border-warning/30">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-warning mb-1">⚠️ Payment Verification Required</p>

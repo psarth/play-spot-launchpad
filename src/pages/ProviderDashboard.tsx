@@ -100,7 +100,7 @@ const ProviderDashboard = () => {
       .from("bookings")
       .select("id")
       .in("venue_id", venueIds)
-      .eq("status", "pending_confirmation");
+      .eq("status", "pending");
 
     // Get total earnings (confirmed bookings)
     const { data: earningsData } = await supabase

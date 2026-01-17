@@ -3,12 +3,10 @@ import { Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export type BookingStatus = 
-  | "pending_payment" 
-  | "pending_confirmation" 
+  | "pending" 
   | "confirmed" 
   | "cancelled"
-  | "pending" // Legacy support
-  | "completed"; // Legacy support
+  | "completed";
 
 interface StatusBadgeProps {
   status: string;
@@ -22,23 +20,11 @@ const statusConfig: Record<string, {
   className: string;
   icon: typeof Clock;
 }> = {
-  pending_payment: {
-    label: "Pending Payment",
-    variant: "outline",
-    className: "border-warning bg-warning/10 text-warning hover:bg-warning/20",
-    icon: Clock,
-  },
-  pending_confirmation: {
-    label: "Pending Confirmation",
-    variant: "outline",
-    className: "border-primary bg-primary/10 text-primary hover:bg-primary/20",
-    icon: AlertCircle,
-  },
   pending: {
-    label: "Pending",
+    label: "Pending Verification",
     variant: "outline",
     className: "border-warning bg-warning/10 text-warning hover:bg-warning/20",
-    icon: Clock,
+    icon: AlertCircle,
   },
   confirmed: {
     label: "Confirmed",
