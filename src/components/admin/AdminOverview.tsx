@@ -6,10 +6,11 @@ import {
   Building2, 
   CalendarDays, 
   IndianRupee,
-  TrendingUp,
+  AlertCircle,
   UserCheck,
   UserX,
-  Calendar
+  Calendar,
+  CheckCircle
 } from "lucide-react";
 import { 
   BarChart, 
@@ -32,13 +33,23 @@ interface Stats {
   activeUsers: number;
   suspendedUsers: number;
   todayBookings: number;
-  pendingBookings: number;
+  pendingConfirmation: number;
+  confirmedBookings: number;
 }
 
 interface BookingsByStatus {
   name: string;
   value: number;
 }
+
+const statusLabels: Record<string, string> = {
+  pending_payment: "Pending Payment",
+  pending_confirmation: "Pending Confirmation",
+  confirmed: "Confirmed",
+  cancelled: "Cancelled",
+  pending: "Pending",
+  completed: "Completed",
+};
 
 const AdminOverview = () => {
   const [stats, setStats] = useState<Stats>({
@@ -49,7 +60,8 @@ const AdminOverview = () => {
     activeUsers: 0,
     suspendedUsers: 0,
     todayBookings: 0,
-    pendingBookings: 0,
+    pendingConfirmation: 0,
+    confirmedBookings: 0,
   });
   const [bookingsByStatus, setBookingsByStatus] = useState<BookingsByStatus[]>([]);
   const [revenueByMonth, setRevenueByMonth] = useState<{ month: string; revenue: number }[]>([]);
@@ -61,39 +73,35 @@ const AdminOverview = () => {
 
   const fetchStats = async () => {
     try {
-      // Fetch user counts by role
       const { data: roles } = await supabase.from("user_roles").select("role");
       const customers = roles?.filter(r => r.role === "customer").length || 0;
       const providers = roles?.filter(r => r.role === "provider").length || 0;
 
-      // Fetch profiles for active/suspended counts
       const { data: profiles } = await supabase.from("profiles").select("is_suspended");
       const active = profiles?.filter(p => !p.is_suspended).length || 0;
       const suspended = profiles?.filter(p => p.is_suspended).length || 0;
 
-      // Fetch bookings
       const { data: bookings } = await supabase.from("bookings").select("*");
       const totalBookings = bookings?.length || 0;
-      const totalRevenue = bookings?.reduce((sum, b) => sum + Number(b.total_amount), 0) || 0;
+      const totalRevenue = bookings?.filter(b => b.status === "confirmed").reduce((sum, b) => sum + Number(b.total_amount), 0) || 0;
 
-      // Today's bookings
       const today = new Date().toISOString().split("T")[0];
       const todayBookings = bookings?.filter(b => b.booking_date === today).length || 0;
-      const pendingBookings = bookings?.filter(b => b.status === "pending").length || 0;
+      const pendingConfirmation = bookings?.filter(b => b.status === "pending_confirmation").length || 0;
+      const confirmedBookings = bookings?.filter(b => b.status === "confirmed").length || 0;
 
-      // Bookings by status for pie chart
       const statusCounts: Record<string, number> = {};
       bookings?.forEach(b => {
-        statusCounts[b.status] = (statusCounts[b.status] || 0) + 1;
+        const label = statusLabels[b.status] || b.status;
+        statusCounts[label] = (statusCounts[label] || 0) + 1;
       });
       const statusData = Object.entries(statusCounts).map(([name, value]) => ({ name, value }));
 
-      // Revenue by month (last 6 months)
       const monthlyRevenue: Record<string, number> = {};
       const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-      bookings?.forEach(b => {
+      bookings?.filter(b => b.status === "confirmed").forEach(b => {
         const date = new Date(b.created_at);
-        const monthKey = `${months[date.getMonth()]} ${date.getFullYear()}`;
+        const monthKey = `${months[date.getMonth()]}`;
         monthlyRevenue[monthKey] = (monthlyRevenue[monthKey] || 0) + Number(b.total_amount);
       });
       const revenueData = Object.entries(monthlyRevenue)
@@ -108,7 +116,8 @@ const AdminOverview = () => {
         activeUsers: active,
         suspendedUsers: suspended,
         todayBookings,
-        pendingBookings,
+        pendingConfirmation,
+        confirmedBookings,
       });
       setBookingsByStatus(statusData);
       setRevenueByMonth(revenueData);
@@ -119,17 +128,17 @@ const AdminOverview = () => {
     }
   };
 
-  const COLORS = ["hsl(var(--primary))", "hsl(var(--accent))", "hsl(var(--muted))", "hsl(var(--destructive))"];
+  const COLORS = ["hsl(145, 63%, 42%)", "hsl(38, 92%, 50%)", "hsl(0, 84%, 60%)", "hsl(200, 18%, 46%)"];
 
   const statCards = [
     { title: "Total Customers", value: stats.totalCustomers, icon: Users, color: "text-blue-500", bg: "bg-blue-500/10" },
     { title: "Total Providers", value: stats.totalProviders, icon: Building2, color: "text-purple-500", bg: "bg-purple-500/10" },
-    { title: "Total Bookings", value: stats.totalBookings, icon: CalendarDays, color: "text-green-500", bg: "bg-green-500/10" },
-    { title: "Total Revenue", value: `₹${stats.totalRevenue.toLocaleString()}`, icon: IndianRupee, color: "text-amber-500", bg: "bg-amber-500/10" },
-    { title: "Active Users", value: stats.activeUsers, icon: UserCheck, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { title: "Suspended Users", value: stats.suspendedUsers, icon: UserX, color: "text-red-500", bg: "bg-red-500/10" },
+    { title: "Total Bookings", value: stats.totalBookings, icon: CalendarDays, color: "text-primary", bg: "bg-primary/10" },
+    { title: "Confirmed Revenue", value: `₹${stats.totalRevenue.toLocaleString()}`, icon: IndianRupee, color: "text-success", bg: "bg-success/10" },
+    { title: "Confirmed Bookings", value: stats.confirmedBookings, icon: CheckCircle, color: "text-success", bg: "bg-success/10" },
+    { title: "Pending Verification", value: stats.pendingConfirmation, icon: AlertCircle, color: "text-warning", bg: "bg-warning/10" },
     { title: "Today's Bookings", value: stats.todayBookings, icon: Calendar, color: "text-cyan-500", bg: "bg-cyan-500/10" },
-    { title: "Pending Bookings", value: stats.pendingBookings, icon: TrendingUp, color: "text-orange-500", bg: "bg-orange-500/10" },
+    { title: "Active Users", value: stats.activeUsers, icon: UserCheck, color: "text-emerald-500", bg: "bg-emerald-500/10" },
   ];
 
   if (loading) {
@@ -142,6 +151,19 @@ const AdminOverview = () => {
 
   return (
     <div className="space-y-6">
+      {/* Alert for pending verification */}
+      {stats.pendingConfirmation > 0 && (
+        <div className="p-4 bg-warning/10 border border-warning/30 rounded-xl flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-warning" />
+          <div>
+            <p className="font-semibold text-warning">Action Required</p>
+            <p className="text-sm text-muted-foreground">
+              {stats.pendingConfirmation} booking(s) are waiting for payment verification. Go to Bookings tab to verify.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {statCards.map((stat, index) => (
@@ -149,11 +171,11 @@ const AdminOverview = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">{stat.title}</p>
+                  <p className="text-xs text-muted-foreground">{stat.title}</p>
                   <p className="text-2xl font-bold mt-1">{stat.value}</p>
                 </div>
-                <div className={`h-12 w-12 rounded-xl ${stat.bg} flex items-center justify-center`}>
-                  <stat.icon className={`h-6 w-6 ${stat.color}`} />
+                <div className={`h-11 w-11 rounded-xl ${stat.bg} flex items-center justify-center`}>
+                  <stat.icon className={`h-5 w-5 ${stat.color}`} />
                 </div>
               </div>
             </CardContent>
@@ -163,10 +185,9 @@ const AdminOverview = () => {
 
       {/* Charts */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Revenue Chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">Revenue Overview</CardTitle>
+            <CardTitle className="text-lg">Confirmed Revenue</CardTitle>
           </CardHeader>
           <CardContent>
             {revenueByMonth.length > 0 ? (
@@ -183,18 +204,17 @@ const AdminOverview = () => {
                     }}
                     formatter={(value: number) => [`₹${value.toLocaleString()}`, "Revenue"]}
                   />
-                  <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="revenue" fill="hsl(145, 63%, 42%)" radius={[4, 4, 0, 0]} />
                 </BarChart>
               </ResponsiveContainer>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                No revenue data available
+                No revenue data yet
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Bookings Status Chart */}
         <Card>
           <CardHeader>
             <CardTitle className="text-lg">Bookings by Status</CardTitle>
@@ -228,7 +248,7 @@ const AdminOverview = () => {
               </ResponsiveContainer>
             ) : (
               <div className="h-[300px] flex items-center justify-center text-muted-foreground">
-                No booking data available
+                No booking data yet
               </div>
             )}
           </CardContent>

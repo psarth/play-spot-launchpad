@@ -1,23 +1,23 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Star } from "lucide-react";
+import { Star, Shield } from "lucide-react";
 
 const testimonials = [
   {
     name: "Rahul Sharma",
-    role: "Regular Player",
-    content: "SportSpot made it so easy to find and book badminton courts near me. The facilities are always top-notch!",
+    role: "Badminton Player, Mumbai",
+    content: "SportSpot made it so easy to find and book badminton courts near me. The UPI payment is super convenient!",
     rating: 5,
   },
   {
     name: "Priya Patel",
-    role: "Cricket Enthusiast",
-    content: "Love the variety of venues available. Booking is seamless, and the cricket nets are professional quality.",
+    role: "Cricket Enthusiast, Delhi",
+    content: "Love the verified venues! Booking is seamless, and the cricket nets are always professional quality.",
     rating: 5,
   },
   {
     name: "Amit Kumar",
-    role: "Pool Player",
-    content: "Best platform for booking sports venues! Clean facilities, great pricing, and excellent customer service.",
+    role: "Pool Player, Bangalore",
+    content: "Best platform for booking sports venues! Clean facilities, great pricing, and excellent support.",
     rating: 5,
   },
 ];
@@ -29,10 +29,10 @@ const Testimonials = () => {
         <div className="text-center mb-12 sm:mb-16">
           <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">Testimonials</span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
-            What Our Players Say
+            Trusted by Players
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-            Join thousands of satisfied players who trust SportSpot
+            Join thousands of satisfied players across India
           </p>
         </div>
 
@@ -48,21 +48,24 @@ const Testimonials = () => {
                   {[...Array(testimonial.rating)].map((_, i) => (
                     <Star
                       key={i}
-                      className="w-4 h-4 sm:w-5 sm:h-5 fill-primary text-primary"
+                      className="w-4 h-4 sm:w-5 sm:h-5 fill-warning text-warning"
                     />
                   ))}
                 </div>
                 <p className="text-muted-foreground mb-6 leading-relaxed text-sm sm:text-base">
                   "{testimonial.content}"
                 </p>
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <span className="text-primary font-semibold">{testimonial.name.charAt(0)}</span>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      <span className="text-primary font-semibold">{testimonial.name.charAt(0)}</span>
+                    </div>
+                    <div>
+                      <div className="font-semibold text-sm sm:text-base">{testimonial.name}</div>
+                      <div className="text-xs sm:text-sm text-muted-foreground">{testimonial.role}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="font-semibold text-sm sm:text-base">{testimonial.name}</div>
-                    <div className="text-xs sm:text-sm text-muted-foreground">{testimonial.role}</div>
-                  </div>
+                  <Shield className="h-5 w-5 text-primary/50" />
                 </div>
               </CardContent>
             </Card>
