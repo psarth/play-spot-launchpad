@@ -5,12 +5,12 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Clock, MapPin, Star, Receipt, AlertCircle } from "lucide-react";
+import { Calendar, Clock, MapPin, Star, Receipt, AlertCircle, Smartphone, CheckCircle } from "lucide-react";
 import ReviewDialog from "@/components/customer/ReviewDialog";
 import PaymentReceipt from "@/components/customer/PaymentReceipt";
+import { StatusBadge } from "@/components/StatusBadge";
 
 interface Booking {
   id: string;
@@ -102,21 +102,6 @@ const MyBookings = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "confirmed":
-        return "default";
-      case "pending":
-        return "secondary";
-      case "cancelled":
-        return "destructive";
-      case "completed":
-        return "outline";
-      default:
-        return "outline";
-    }
-  };
-
   const isUpcoming = (booking: Booking) => {
     const bookingDate = new Date(booking.booking_date);
     const today = new Date();
@@ -140,12 +125,27 @@ const MyBookings = () => {
     return review?.rating;
   };
 
+  const getStatusMessage = (status: string) => {
+    switch (status) {
+      case "pending_payment":
+        return "Complete your UPI payment to proceed.";
+      case "pending_confirmation":
+        return "Payment submitted. Waiting for venue owner to verify.";
+      case "confirmed":
+        return "Your booking is confirmed. See you there!";
+      case "cancelled":
+        return "This booking has been cancelled.";
+      default:
+        return "";
+    }
+  };
+
   const upcomingBookings = bookings.filter(isUpcoming);
   const pastBookings = bookings.filter(isPast);
 
   const renderBookingCard = (booking: Booking, showReviewButton: boolean) => (
     <Card key={booking.id} className="overflow-hidden hover:shadow-md transition-shadow">
-      <CardHeader className="bg-secondary/50 py-4">
+      <CardHeader className="bg-muted/50 py-4">
         <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
           <div className="flex-1">
             <CardTitle className="text-lg">{booking.venues.name}</CardTitle>
@@ -155,19 +155,32 @@ const MyBookings = () => {
             </CardDescription>
           </div>
           <div className="flex items-center gap-2">
-            <Badge variant={getStatusColor(booking.status)}>
-              {booking.status.toUpperCase()}
-            </Badge>
+            <StatusBadge status={booking.status} size="sm" />
             {showReviewButton && hasReview(booking.id) && (
-              <Badge variant="outline" className="gap-1">
-                <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-                {getReviewRating(booking.id)}
-              </Badge>
+              <div className="flex items-center gap-1 text-sm bg-warning/10 text-warning px-2 py-1 rounded-lg">
+                <Star className="h-3.5 w-3.5 fill-warning" />
+                <span className="font-semibold">{getReviewRating(booking.id)}</span>
+              </div>
             )}
           </div>
         </div>
       </CardHeader>
       <CardContent className="pt-4">
+        {/* Status Message */}
+        {getStatusMessage(booking.status) && (
+          <div className={`flex items-center gap-2 p-3 rounded-lg mb-4 text-sm ${
+            booking.status === "confirmed" ? "bg-success/10 text-success" :
+            booking.status === "pending_confirmation" ? "bg-primary/10 text-primary" :
+            booking.status === "pending_payment" ? "bg-warning/10 text-warning" :
+            "bg-muted text-muted-foreground"
+          }`}>
+            {booking.status === "confirmed" && <CheckCircle className="h-4 w-4" />}
+            {booking.status === "pending_confirmation" && <Clock className="h-4 w-4" />}
+            {booking.status === "pending_payment" && <Smartphone className="h-4 w-4" />}
+            {getStatusMessage(booking.status)}
+          </div>
+        )}
+
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
           <div className="flex items-center gap-3">
             <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
@@ -209,8 +222,8 @@ const MyBookings = () => {
         )}
 
         <div className="flex flex-wrap gap-2">
-          {/* Receipt Button - always show for paid bookings */}
-          {booking.payment_status === "completed" && (
+          {/* Receipt Button - show for confirmed/completed bookings */}
+          {(booking.status === "confirmed" || booking.payment_status === "completed") && (
             <Button
               variant="outline"
               size="sm"
@@ -223,7 +236,7 @@ const MyBookings = () => {
           )}
 
           {/* Review Button - show for past completed bookings without review */}
-          {showReviewButton && !hasReview(booking.id) && booking.status !== "cancelled" && (
+          {showReviewButton && !hasReview(booking.id) && booking.status === "confirmed" && (
             <Button
               variant="outline"
               size="sm"
@@ -235,8 +248,8 @@ const MyBookings = () => {
             </Button>
           )}
 
-          {/* Cancel Button - only for upcoming bookings */}
-          {!showReviewButton && booking.status === "confirmed" && (
+          {/* Cancel Button - only for pending or confirmed bookings */}
+          {!showReviewButton && (booking.status === "confirmed" || booking.status === "pending_confirmation") && (
             <Button
               variant="destructive"
               size="sm"
@@ -252,9 +265,9 @@ const MyBookings = () => {
   );
 
   return (
-    <div className="min-h-screen flex flex-col bg-secondary/30">
+    <div className="min-h-screen flex flex-col bg-muted/30">
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-12">
+      <main className="flex-1 container mx-auto px-4 py-12 pt-24">
         <div className="mb-8">
           <h1 className="text-3xl md:text-4xl font-bold mb-2">My Bookings</h1>
           <p className="text-muted-foreground">View and manage your venue bookings</p>
@@ -266,10 +279,11 @@ const MyBookings = () => {
             <p className="mt-4 text-muted-foreground">Loading bookings...</p>
           </div>
         ) : bookings.length === 0 ? (
-          <Card className="text-center py-16">
+          <Card className="text-center py-16 border-dashed">
             <CardContent>
-              <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <p className="text-muted-foreground mb-6 text-lg">You don't have any bookings yet.</p>
+              <AlertCircle className="h-12 w-12 text-muted-foreground/50 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold mb-2">No Bookings Yet</h3>
+              <p className="text-muted-foreground mb-6">Start by browsing venues and making your first booking.</p>
               <Button size="lg" onClick={() => navigate("/browse-venues")}>Browse Venues</Button>
             </CardContent>
           </Card>
@@ -286,9 +300,9 @@ const MyBookings = () => {
 
             <TabsContent value="upcoming" className="space-y-4">
               {upcomingBookings.length === 0 ? (
-                <Card className="text-center py-12">
+                <Card className="text-center py-12 border-dashed">
                   <CardContent>
-                    <Calendar className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                    <Calendar className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
                     <p className="text-muted-foreground">No upcoming bookings</p>
                     <Button variant="outline" onClick={() => navigate("/browse-venues")} className="mt-4">
                       Book a Venue
@@ -302,9 +316,9 @@ const MyBookings = () => {
 
             <TabsContent value="past" className="space-y-4">
               {pastBookings.length === 0 ? (
-                <Card className="text-center py-12">
+                <Card className="text-center py-12 border-dashed">
                   <CardContent>
-                    <Clock className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+                    <Clock className="h-10 w-10 text-muted-foreground/50 mx-auto mb-3" />
                     <p className="text-muted-foreground">No past bookings</p>
                   </CardContent>
                 </Card>

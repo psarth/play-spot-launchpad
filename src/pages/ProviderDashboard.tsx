@@ -95,21 +95,21 @@ const ProviderDashboard = () => {
       .eq("booking_date", today)
       .eq("status", "confirmed");
 
-    // Get pending bookings
+    // Get pending confirmation bookings
     const { data: pendingData } = await supabase
       .from("bookings")
       .select("id")
       .in("venue_id", venueIds)
-      .eq("status", "pending");
+      .eq("status", "pending_confirmation");
 
-    // Get total earnings (completed payments)
+    // Get total earnings (confirmed bookings)
     const { data: earningsData } = await supabase
       .from("bookings")
       .select("total_amount")
       .in("venue_id", venueIds)
-      .eq("payment_status", "completed");
+      .eq("status", "confirmed");
 
-    const totalEarnings = earningsData?.reduce((sum, b) => sum + b.total_amount, 0) || 0;
+    const totalEarnings = earningsData?.reduce((sum, b) => sum + Number(b.total_amount), 0) || 0;
 
     setStats({
       todayBookings: todayData?.length || 0,
@@ -160,15 +160,15 @@ const ProviderDashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="bg-card">
+          <Card className={`bg-card ${stats.pendingBookings > 0 ? "border-warning" : ""}`}>
             <CardContent className="pt-5">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-muted-foreground mb-1">Pending</p>
-                  <p className="text-2xl font-bold text-orange-500">{stats.pendingBookings}</p>
+                  <p className="text-xs text-muted-foreground mb-1">Pending Verification</p>
+                  <p className="text-2xl font-bold text-warning">{stats.pendingBookings}</p>
                 </div>
-                <div className="h-11 w-11 rounded-xl bg-orange-500/10 flex items-center justify-center">
-                  <Clock className="h-5 w-5 text-orange-500" />
+                <div className="h-11 w-11 rounded-xl bg-warning/10 flex items-center justify-center">
+                  <Clock className="h-5 w-5 text-warning" />
                 </div>
               </div>
             </CardContent>

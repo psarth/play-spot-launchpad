@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import {
   Select,
   SelectContent,
@@ -31,7 +30,8 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Search, XCircle, Calendar } from "lucide-react";
+import { Search, XCircle, CheckCircle, Calendar } from "lucide-react";
+import { StatusBadge } from "@/components/StatusBadge";
 
 interface Booking {
   id: string;
@@ -71,21 +71,18 @@ const BookingManagement = () => {
 
       if (!bookingsData) return;
 
-      // Get venue details
       const venueIds = [...new Set(bookingsData.map(b => b.venue_id))];
       const { data: venues } = await supabase
         .from("venues")
         .select("id, name, sport_id")
         .in("id", venueIds);
 
-      // Get sport names
       const sportIds = [...new Set(venues?.map(v => v.sport_id) || [])];
       const { data: sports } = await supabase
         .from("sports")
         .select("id, name")
         .in("id", sportIds);
 
-      // Get customer names
       const customerIds = [...new Set(bookingsData.map(b => b.customer_id))];
       const { data: profiles } = await supabase
         .from("profiles")
@@ -141,6 +138,21 @@ const BookingManagement = () => {
     setFilteredBookings(filtered);
   };
 
+  const confirmBooking = async (bookingId: string) => {
+    const { error } = await supabase
+      .from("bookings")
+      .update({ status: "confirmed", payment_status: "completed" })
+      .eq("id", bookingId);
+
+    if (error) {
+      toast({ title: "Error confirming booking", variant: "destructive" });
+    } else {
+      await supabase.from("payments").update({ status: "completed" }).eq("booking_id", bookingId);
+      toast({ title: "Booking confirmed successfully" });
+      fetchBookings();
+    }
+  };
+
   const cancelBooking = async (bookingId: string) => {
     const { error } = await supabase
       .from("bookings")
@@ -150,25 +162,12 @@ const BookingManagement = () => {
     if (error) {
       toast({ title: "Error cancelling booking", variant: "destructive" });
     } else {
-      toast({ title: "Booking cancelled successfully" });
+      toast({ title: "Booking cancelled" });
       fetchBookings();
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "confirmed":
-        return "default";
-      case "pending":
-        return "secondary";
-      case "cancelled":
-        return "destructive";
-      case "completed":
-        return "outline";
-      default:
-        return "secondary";
-    }
-  };
+  const pendingCount = bookings.filter(b => b.status === "pending_confirmation").length;
 
   if (loading) {
     return (
@@ -182,10 +181,17 @@ const BookingManagement = () => {
     <Card>
       <CardHeader>
         <div className="flex flex-col gap-4">
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            Booking Management
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Booking Management
+            </CardTitle>
+            {pendingCount > 0 && (
+              <span className="text-sm bg-warning/10 text-warning px-3 py-1 rounded-full font-medium">
+                {pendingCount} pending verification
+              </span>
+            )}
+          </div>
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -197,15 +203,14 @@ const BookingManagement = () => {
               />
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-full sm:w-40">
+              <SelectTrigger className="w-full sm:w-48">
                 <SelectValue placeholder="Filter by status" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All Status</SelectItem>
-                <SelectItem value="pending">Pending</SelectItem>
-                <SelectItem value="confirmed">Confirmed</SelectItem>
-                <SelectItem value="completed">Completed</SelectItem>
-                <SelectItem value="cancelled">Cancelled</SelectItem>
+                <SelectItem value="pending_confirmation">⏳ Pending Confirmation</SelectItem>
+                <SelectItem value="confirmed">✅ Confirmed</SelectItem>
+                <SelectItem value="cancelled">❌ Cancelled</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -214,7 +219,8 @@ const BookingManagement = () => {
       <CardContent>
         {filteredBookings.length === 0 ? (
           <div className="text-center py-12 text-muted-foreground">
-            No bookings found
+            <Calendar className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>No bookings found</p>
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -223,62 +229,76 @@ const BookingManagement = () => {
                 <TableRow>
                   <TableHead>Venue</TableHead>
                   <TableHead>Customer</TableHead>
-                  <TableHead>Sport</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Time</TableHead>
                   <TableHead>Amount</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Payment</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredBookings.map((booking) => (
-                  <TableRow key={booking.id}>
-                    <TableCell className="font-medium">{booking.venue_name}</TableCell>
+                  <TableRow key={booking.id} className={booking.status === "pending_confirmation" ? "bg-warning/5" : ""}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{booking.venue_name}</p>
+                        <p className="text-xs text-muted-foreground">{booking.sport_name}</p>
+                      </div>
+                    </TableCell>
                     <TableCell>{booking.customer_name}</TableCell>
+                    <TableCell>{new Date(booking.booking_date).toLocaleDateString("en-IN", { day: "numeric", month: "short" })}</TableCell>
+                    <TableCell>{booking.start_time.slice(0, 5)} - {booking.end_time.slice(0, 5)}</TableCell>
+                    <TableCell className="font-semibold">₹{booking.total_amount.toLocaleString()}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{booking.sport_name}</Badge>
-                    </TableCell>
-                    <TableCell>{new Date(booking.booking_date).toLocaleDateString()}</TableCell>
-                    <TableCell>
-                      {booking.start_time.slice(0, 5)} - {booking.end_time.slice(0, 5)}
-                    </TableCell>
-                    <TableCell>₹{booking.total_amount.toLocaleString()}</TableCell>
-                    <TableCell>
-                      <Badge variant={getStatusColor(booking.status)}>
-                        {booking.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={booking.payment_status === "completed" ? "default" : "secondary"}>
-                        {booking.payment_status}
-                      </Badge>
+                      <StatusBadge status={booking.status} size="sm" />
                     </TableCell>
                     <TableCell className="text-right">
-                      {booking.status !== "cancelled" && booking.status !== "completed" && (
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm">
-                              <XCircle className="h-4 w-4" />
+                      <div className="flex justify-end gap-2">
+                        {booking.status === "pending_confirmation" && (
+                          <>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => confirmBooking(booking.id)}
+                              className="gap-1"
+                            >
+                              <CheckCircle className="h-3 w-3" />
+                              Verify
                             </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Cancel Booking</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                Are you sure you want to cancel this booking? This action cannot be undone.
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Keep Booking</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => cancelBooking(booking.id)}>
-                                Cancel Booking
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
-                      )}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => cancelBooking(booking.id)}
+                              className="text-destructive hover:text-destructive"
+                            >
+                              <XCircle className="h-3 w-3" />
+                            </Button>
+                          </>
+                        )}
+                        {booking.status !== "cancelled" && booking.status !== "pending_confirmation" && (
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive">
+                                <XCircle className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Cancel Booking</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to cancel this booking? This action cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Keep Booking</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => cancelBooking(booking.id)}>
+                                  Cancel Booking
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        )}
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))}
