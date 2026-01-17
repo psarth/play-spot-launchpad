@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Clock, Star, CheckCircle, ArrowLeft, CreditCard } from "lucide-react";
+import { MapPin, Clock, Star, CheckCircle, ArrowLeft, Smartphone, Shield, Copy, Check } from "lucide-react";
 
 interface Venue {
   id: string;
@@ -33,6 +33,9 @@ interface GeneratedSlot {
   isBooked: boolean;
 }
 
+// UPI Details - Replace with actual venue owner's UPI
+const UPI_ID = "sportspot@upi";
+
 const BookVenue = () => {
   const { venueId } = useParams();
   const navigate = useNavigate();
@@ -44,8 +47,9 @@ const BookVenue = () => {
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(false);
   const [slotsLoading, setSlotsLoading] = useState(false);
-  const [step, setStep] = useState<"select" | "confirm" | "success">("select");
+  const [step, setStep] = useState<"select" | "payment" | "success">("select");
   const [bookingResult, setBookingResult] = useState<any>(null);
+  const [upiCopied, setUpiCopied] = useState(false);
 
   useEffect(() => {
     fetchVenue();
@@ -87,7 +91,7 @@ const BookVenue = () => {
       .select("start_time, end_time")
       .eq("venue_id", venueId)
       .eq("booking_date", dateStr)
-      .in("status", ["confirmed", "pending"]);
+      .in("status", ["confirmed", "pending_confirmation", "pending_payment"]);
 
     // Generate slots from 6 AM to 10 PM (1-hour slots)
     const slots: GeneratedSlot[] = [];
@@ -121,7 +125,7 @@ const BookVenue = () => {
     setSlotsLoading(false);
   };
 
-  const handleProceedToConfirm = async () => {
+  const handleProceedToPayment = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       toast({ title: "Please login to book", variant: "destructive" });
@@ -132,10 +136,17 @@ const BookVenue = () => {
       toast({ title: "Please select date and time", variant: "destructive" });
       return;
     }
-    setStep("confirm");
+    setStep("payment");
   };
 
-  const handleBooking = async () => {
+  const handleCopyUPI = () => {
+    navigator.clipboard.writeText(UPI_ID);
+    setUpiCopied(true);
+    toast({ title: "UPI ID copied!" });
+    setTimeout(() => setUpiCopied(false), 2000);
+  };
+
+  const handlePaymentConfirmation = async () => {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user || !selectedDate || !selectedSlot || !venue) return;
@@ -144,7 +155,7 @@ const BookVenue = () => {
 
     const totalAmount = venue.price_per_hour;
 
-    // Create booking
+    // Create booking with pending_confirmation status
     const { data, error } = await supabase
       .from("bookings")
       .insert({
@@ -155,9 +166,8 @@ const BookVenue = () => {
         end_time: selectedSlot.end_time,
         total_amount: totalAmount,
         notes: notes || null,
-        status: "confirmed",
-        payment_status: "completed",
-        payment_intent_id: `demo_${Date.now()}`,
+        status: "pending_confirmation",
+        payment_status: "pending_verification",
       })
       .select()
       .single();
@@ -168,13 +178,12 @@ const BookVenue = () => {
       return;
     }
 
-    // Create payment record
+    // Create payment record for verification
     await supabase.from("payments").insert({
       booking_id: data.id,
       amount: totalAmount,
-      status: "completed",
-      payment_method: "demo",
-      transaction_id: `demo_txn_${Date.now()}`,
+      status: "pending",
+      payment_method: "upi",
     });
 
     setBookingResult({
@@ -199,16 +208,18 @@ const BookVenue = () => {
   // Success Step
   if (step === "success" && bookingResult) {
     return (
-      <div className="min-h-screen flex flex-col bg-secondary/30">
+      <div className="min-h-screen flex flex-col bg-muted/30">
         <Navbar />
-        <main className="flex-1 container mx-auto px-4 py-12 flex items-center justify-center">
+        <main className="flex-1 container mx-auto px-4 py-12 pt-24 flex items-center justify-center">
           <Card className="max-w-lg w-full text-center">
             <CardContent className="pt-8 pb-8">
-              <div className="h-20 w-20 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-6">
-                <CheckCircle className="h-10 w-10 text-green-600" />
+              <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
+                <Clock className="h-10 w-10 text-primary" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">Booking Confirmed! 🎉</h2>
-              <p className="text-muted-foreground mb-6">Your booking has been successfully confirmed.</p>
+              <h2 className="text-2xl font-bold mb-2">Booking Submitted! 🎉</h2>
+              <p className="text-muted-foreground mb-6">
+                Your booking is pending confirmation. The venue owner will verify your payment and confirm shortly.
+              </p>
               
               <div className="bg-muted/50 rounded-xl p-4 mb-6 text-left space-y-3">
                 <div className="flex justify-between">
@@ -217,19 +228,21 @@ const BookVenue = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Date</span>
-                  <span className="font-semibold">{new Date(bookingResult.booking_date).toLocaleDateString()}</span>
+                  <span className="font-semibold">{new Date(bookingResult.booking_date).toLocaleDateString("en-IN")}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Time</span>
                   <span className="font-semibold">{bookingResult.slot_label}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Amount Paid</span>
-                  <span className="font-semibold text-green-600">₹{bookingResult.total_amount}</span>
+                  <span className="text-muted-foreground">Amount</span>
+                  <span className="font-semibold">₹{bookingResult.total_amount}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Booking ID</span>
-                  <span className="font-mono text-xs">{bookingResult.id.slice(0, 8)}...</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-muted-foreground">Status</span>
+                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
+                    Pending Confirmation
+                  </Badge>
                 </div>
               </div>
 
@@ -249,12 +262,12 @@ const BookVenue = () => {
     );
   }
 
-  // Confirm Step
-  if (step === "confirm") {
+  // Payment Step (UPI)
+  if (step === "payment") {
     return (
-      <div className="min-h-screen flex flex-col bg-secondary/30">
+      <div className="min-h-screen flex flex-col bg-muted/30">
         <Navbar />
-        <main className="flex-1 container mx-auto px-4 py-12">
+        <main className="flex-1 container mx-auto px-4 py-12 pt-24">
           <Button 
             variant="ghost" 
             onClick={() => setStep("select")} 
@@ -266,12 +279,12 @@ const BookVenue = () => {
 
           <div className="max-w-2xl mx-auto">
             <Card>
-              <CardHeader className="bg-gradient-to-r from-primary/10 to-accent/10">
+              <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 border-b">
                 <CardTitle className="text-2xl flex items-center gap-2">
-                  <CreditCard className="h-6 w-6" />
-                  Confirm Your Booking
+                  <Smartphone className="h-6 w-6" />
+                  Pay via UPI
                 </CardTitle>
-                <CardDescription>Review your booking details before payment</CardDescription>
+                <CardDescription>Complete your payment using any UPI app</CardDescription>
               </CardHeader>
               <CardContent className="pt-6 space-y-6">
                 {/* Booking Summary */}
@@ -285,9 +298,9 @@ const BookVenue = () => {
                     <div>
                       <p className="text-sm text-muted-foreground">Date</p>
                       <p className="font-semibold">{selectedDate?.toLocaleDateString("en-IN", { 
-                        weekday: "long", 
+                        weekday: "short", 
                         year: "numeric", 
-                        month: "long", 
+                        month: "short", 
                         day: "numeric" 
                       })}</p>
                     </div>
@@ -298,39 +311,65 @@ const BookVenue = () => {
                   </div>
                 </div>
 
-                {/* Price Breakdown */}
-                <div className="border rounded-xl p-5 space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Hourly Rate</span>
-                    <span>₹{venue.price_per_hour}</span>
+                {/* Amount */}
+                <div className="text-center p-6 bg-primary/5 rounded-xl border-2 border-primary/20">
+                  <p className="text-sm text-muted-foreground mb-1">Amount to Pay</p>
+                  <p className="text-4xl font-bold text-primary">₹{venue.price_per_hour}</p>
+                </div>
+
+                {/* UPI Payment Section */}
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+                    <Shield className="h-4 w-4 text-primary" />
+                    Secure UPI Payment
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Duration</span>
-                    <span>1 hour</span>
+
+                  {/* UPI ID */}
+                  <div className="p-4 bg-muted rounded-xl">
+                    <p className="text-sm text-muted-foreground mb-2 text-center">Pay to UPI ID</p>
+                    <div className="flex items-center justify-center gap-2">
+                      <code className="text-lg font-mono font-semibold bg-background px-4 py-2 rounded-lg">
+                        {UPI_ID}
+                      </code>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={handleCopyUPI}
+                      >
+                        {upiCopied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
                   </div>
-                  <div className="border-t pt-3 flex justify-between text-lg font-bold">
-                    <span>Total Amount</span>
-                    <span className="text-primary">₹{venue.price_per_hour}</span>
+
+                  {/* Payment Instructions */}
+                  <div className="bg-warning/10 border border-warning/30 rounded-xl p-4">
+                    <h4 className="font-semibold text-warning mb-2">Payment Instructions</h4>
+                    <ol className="text-sm text-muted-foreground space-y-2">
+                      <li>1. Open any UPI app (GPay, PhonePe, Paytm, etc.)</li>
+                      <li>2. Pay ₹{venue.price_per_hour} to the UPI ID above</li>
+                      <li>3. Click "I Have Paid" button below</li>
+                      <li>4. Wait for venue owner to confirm your payment</li>
+                    </ol>
+                  </div>
+
+                  {/* Notes */}
+                  <div>
+                    <Label htmlFor="notes" className="text-base font-semibold">
+                      Additional Notes <span className="text-muted-foreground font-normal">(Optional)</span>
+                    </Label>
+                    <Textarea
+                      id="notes"
+                      value={notes}
+                      onChange={(e) => setNotes(e.target.value)}
+                      placeholder="Any special requests or requirements..."
+                      className="mt-2 rounded-xl min-h-[80px]"
+                    />
                   </div>
                 </div>
 
-                {/* Notes */}
-                <div>
-                  <Label htmlFor="notes" className="text-base font-semibold">
-                    Additional Notes <span className="text-muted-foreground font-normal">(Optional)</span>
-                  </Label>
-                  <Textarea
-                    id="notes"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Any special requests or requirements..."
-                    className="mt-2 rounded-xl min-h-[80px]"
-                  />
-                </div>
-
-                {/* Pay Button */}
+                {/* Confirm Button */}
                 <Button
-                  onClick={handleBooking}
+                  onClick={handlePaymentConfirmation}
                   disabled={loading}
                   className="w-full h-14 text-lg font-semibold rounded-xl"
                   size="lg"
@@ -338,17 +377,17 @@ const BookVenue = () => {
                   {loading ? (
                     <>
                       <div className="h-5 w-5 animate-spin rounded-full border-2 border-white border-r-transparent mr-2" />
-                      Processing Payment...
+                      Processing...
                     </>
                   ) : (
                     <>
-                      <CreditCard className="h-5 w-5 mr-2" />
-                      Pay ₹{venue.price_per_hour} & Confirm
+                      <CheckCircle className="h-5 w-5 mr-2" />
+                      I Have Paid ₹{venue.price_per_hour}
                     </>
                   )}
                 </Button>
                 <p className="text-xs text-center text-muted-foreground">
-                  🔒 Demo mode - No actual charges will be made
+                  Your booking will be confirmed once the venue owner verifies your payment
                 </p>
               </CardContent>
             </Card>
@@ -361,9 +400,9 @@ const BookVenue = () => {
 
   // Selection Step (Default)
   return (
-    <div className="min-h-screen flex flex-col bg-secondary/30">
+    <div className="min-h-screen flex flex-col bg-muted/30">
       <Navbar />
-      <main className="flex-1 container mx-auto px-4 py-12">
+      <main className="flex-1 container mx-auto px-4 py-12 pt-24">
         <Button 
           variant="outline" 
           onClick={() => navigate("/browse-venues")} 
@@ -384,8 +423,14 @@ const BookVenue = () => {
                     alt={venue.name}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-background/95 to-transparent p-6">
-                    <Badge className="mb-2">{venue.sports?.name}</Badge>
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-foreground/95 to-transparent p-6">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge className="bg-primary">{venue.sports?.name}</Badge>
+                      <Badge variant="outline" className="bg-background/80 text-foreground border-0">
+                        <Shield className="h-3 w-3 mr-1" />
+                        Verified
+                      </Badge>
+                    </div>
                     <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">{venue.name}</h1>
                     <p className="flex items-center gap-2 text-white/90">
                       <MapPin className="h-4 w-4" />
@@ -394,8 +439,14 @@ const BookVenue = () => {
                   </div>
                 </div>
               ) : (
-                <div className="p-6 bg-gradient-to-r from-primary/10 to-accent/10">
-                  <Badge className="mb-2">{venue.sports?.name}</Badge>
+                <div className="p-6 bg-gradient-to-r from-primary/10 to-primary/5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Badge className="bg-primary">{venue.sports?.name}</Badge>
+                    <Badge variant="outline">
+                      <Shield className="h-3 w-3 mr-1" />
+                      Verified
+                    </Badge>
+                  </div>
                   <h1 className="text-2xl md:text-3xl font-bold mb-2">{venue.name}</h1>
                   <p className="flex items-center gap-2 text-muted-foreground">
                     <MapPin className="h-4 w-4" />
@@ -411,7 +462,7 @@ const BookVenue = () => {
                   <CardTitle>About This Venue</CardTitle>
                   {venue.average_rating && venue.average_rating > 0 && (
                     <div className="flex items-center gap-1">
-                      <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                      <Star className="h-5 w-5 fill-warning text-warning" />
                       <span className="font-bold">{venue.average_rating}</span>
                       <span className="text-muted-foreground">({venue.total_reviews} reviews)</span>
                     </div>
@@ -430,6 +481,10 @@ const BookVenue = () => {
                   <div>
                     <p className="text-3xl font-bold text-primary">₹{venue.price_per_hour}</p>
                     <p className="text-sm text-muted-foreground">per hour</p>
+                  </div>
+                  <div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
+                    <Smartphone className="h-4 w-4" />
+                    UPI Accepted
                   </div>
                 </div>
 
@@ -452,92 +507,103 @@ const BookVenue = () => {
           {/* Booking Form - Right Side */}
           <div className="lg:col-span-2">
             <Card className="sticky top-24">
-              <CardHeader className="bg-gradient-to-r from-primary/10 to-accent/10">
+              <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 border-b">
                 <CardTitle className="text-xl">Book This Venue</CardTitle>
                 <CardDescription>Select your preferred date and time slot</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-5 pt-6">
+              <CardContent className="pt-6 space-y-6">
                 {/* Step 1: Select Date */}
                 <div>
-                  <Label className="text-sm font-semibold mb-2 block flex items-center gap-2">
-                    <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs">1</span>
-                    Select Date
+                  <Label className="text-base font-semibold mb-3 block">
+                    1. Select Date
                   </Label>
-                  <Calendar
-                    mode="single"
-                    selected={selectedDate}
-                    onSelect={setSelectedDate}
-                    disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
-                    className="rounded-xl border shadow-sm"
-                  />
+                  <div className="border rounded-xl p-3 flex justify-center">
+                    <Calendar
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={setSelectedDate}
+                      disabled={(date) => date < new Date(new Date().setHours(0, 0, 0, 0))}
+                      className="rounded-xl"
+                    />
+                  </div>
                 </div>
 
-                {/* Step 2: Select Time */}
-                {selectedDate && (
-                  <div className="animate-in slide-in-from-top-2 duration-300">
-                    <Label className="text-sm font-semibold mb-3 block flex items-center gap-2">
-                      <span className="h-6 w-6 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-xs">2</span>
-                      Select Time Slot
-                    </Label>
-                    {slotsLoading ? (
-                      <div className="text-center py-8 bg-muted/50 rounded-xl">
-                        <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-primary border-r-transparent mb-2"></div>
-                        <p className="text-sm text-muted-foreground">Loading available slots...</p>
-                      </div>
-                    ) : generatedSlots.filter(s => !s.isBooked).length === 0 ? (
-                      <div className="text-center py-8 bg-muted/50 rounded-xl">
-                        <Clock className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
-                        <p className="text-sm text-muted-foreground">
-                          No available slots for this date
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          Please try another date
-                        </p>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-3 gap-2 max-h-[280px] overflow-y-auto pr-1">
-                        {generatedSlots.map((slot, idx) => (
-                          <Button
-                            key={idx}
-                            variant={selectedSlot?.start_time === slot.start_time ? "default" : "outline"}
-                            onClick={() => !slot.isBooked && setSelectedSlot(slot)}
-                            disabled={slot.isBooked}
-                            className={`h-auto py-2 px-2 text-xs rounded-lg ${
-                              slot.isBooked ? "opacity-40 cursor-not-allowed line-through" : ""
-                            }`}
-                          >
-                            {slot.label.split(" - ")[0]}
-                          </Button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
+                {/* Step 2: Select Time Slot */}
+                <div>
+                  <Label className="text-base font-semibold mb-3 block">
+                    2. Select Time Slot
+                  </Label>
+                  {!selectedDate ? (
+                    <div className="text-center py-8 text-muted-foreground border rounded-xl bg-muted/30">
+                      <Clock className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p>Please select a date first</p>
+                    </div>
+                  ) : slotsLoading ? (
+                    <div className="text-center py-8">
+                      <div className="inline-block h-6 w-6 animate-spin rounded-full border-2 border-solid border-primary border-r-transparent"></div>
+                      <p className="mt-2 text-sm text-muted-foreground">Loading available slots...</p>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto p-1">
+                      {generatedSlots.map((slot) => (
+                        <button
+                          key={slot.start_time}
+                          onClick={() => !slot.isBooked && setSelectedSlot(slot)}
+                          disabled={slot.isBooked}
+                          className={`p-3 rounded-lg text-sm font-medium transition-all border ${
+                            slot.isBooked
+                              ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
+                              : selectedSlot?.start_time === slot.start_time
+                              ? "bg-primary text-primary-foreground border-primary shadow-md"
+                              : "bg-background hover:bg-primary/10 hover:border-primary/50"
+                          }`}
+                        >
+                          {slot.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-                {/* Selected Summary */}
+                {/* Price Summary */}
                 {selectedSlot && (
-                  <div className="bg-primary/5 rounded-xl p-4 border border-primary/20 animate-in slide-in-from-top-2 duration-300">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-sm text-muted-foreground">Selected</span>
-                      <Badge variant="secondary">
-                        {selectedDate?.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" })}
-                      </Badge>
+                  <div className="border rounded-xl p-4 space-y-2 bg-muted/30">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Selected Slot</span>
+                      <span className="font-medium">{selectedSlot.label}</span>
                     </div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold">{selectedSlot.label}</span>
-                      <span className="font-bold text-primary">₹{venue.price_per_hour}</span>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Date</span>
+                      <span className="font-medium">{selectedDate?.toLocaleDateString("en-IN")}</span>
+                    </div>
+                    <div className="border-t pt-2 flex justify-between text-lg font-bold">
+                      <span>Total</span>
+                      <span className="text-primary">₹{venue.price_per_hour}</span>
                     </div>
                   </div>
                 )}
 
+                {/* Proceed Button */}
                 <Button
-                  onClick={handleProceedToConfirm}
+                  onClick={handleProceedToPayment}
                   disabled={!selectedDate || !selectedSlot}
                   className="w-full h-12 text-base font-semibold rounded-xl"
                   size="lg"
                 >
-                  Continue to Payment
+                  Proceed to Payment
                 </Button>
+
+                {/* Trust Indicators */}
+                <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground">
+                  <div className="flex items-center gap-1">
+                    <Smartphone className="h-3 w-3" />
+                    UPI Accepted
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Shield className="h-3 w-3" />
+                    Verified Venue
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </div>

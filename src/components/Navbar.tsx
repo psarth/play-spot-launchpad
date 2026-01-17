@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { Menu, User, Calendar, LogOut, RefreshCw } from "lucide-react";
+import { Menu, User, Calendar, LogOut, RefreshCw, Home, Building2, Shield } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
@@ -11,6 +11,7 @@ const Navbar = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
   const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     checkAuth();
@@ -45,17 +46,25 @@ const Navbar = () => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     toast.success("Logged out successfully");
-    navigate("/login");
+    navigate("/");
   };
 
-  const handleSwitchRole = () => {
-    if (userRole === "provider") {
-      navigate("/browse-venues");
-    } else if (userRole === "customer") {
-      navigate("/provider-dashboard");
-    } else if (userRole === "admin") {
-      navigate("/admin-dashboard");
-    }
+  const getDashboardLink = () => {
+    if (userRole === "admin") return "/admin-dashboard";
+    if (userRole === "provider") return "/provider-dashboard";
+    return "/browse-venues";
+  };
+
+  const getRoleIcon = () => {
+    if (userRole === "admin") return <Shield className="w-4 h-4" />;
+    if (userRole === "provider") return <Building2 className="w-4 h-4" />;
+    return <User className="w-4 h-4" />;
+  };
+
+  const getRoleLabel = () => {
+    if (userRole === "admin") return "Admin Dashboard";
+    if (userRole === "provider") return "Provider Dashboard";
+    return "Browse Venues";
   };
 
   return (
@@ -76,17 +85,14 @@ const Navbar = () => {
           {!isAuthenticated ? (
             <>
               <div className="hidden md:flex items-center space-x-8">
-                <a href="#services" className="text-foreground hover:text-primary transition-colors">
-                  Services
+                <a href="/#services" className="text-foreground hover:text-primary transition-colors font-medium">
+                  Sports
                 </a>
-                <a href="#about" className="text-foreground hover:text-primary transition-colors">
-                  About
+                <a href="/browse-venues" className="text-foreground hover:text-primary transition-colors font-medium">
+                  Browse Venues
                 </a>
-                <a href="#testimonials" className="text-foreground hover:text-primary transition-colors">
-                  Testimonials
-                </a>
-                <a href="#contact" className="text-foreground hover:text-primary transition-colors">
-                  Contact
+                <a href="/#testimonials" className="text-foreground hover:text-primary transition-colors font-medium">
+                  Reviews
                 </a>
               </div>
 
@@ -94,13 +100,19 @@ const Navbar = () => {
                 <Button variant="ghost" size="default" asChild>
                   <a href="/login">Log In</a>
                 </Button>
-                <Button variant="hero" size="default" asChild>
+                <Button size="default" asChild>
                   <a href="/signup">Sign Up</a>
                 </Button>
               </div>
             </>
           ) : (
             <div className="hidden md:flex items-center gap-4">
+              <Button variant="ghost" size="sm" asChild>
+                <a href="/browse-venues">
+                  <Home className="w-4 h-4 mr-2" />
+                  Browse
+                </a>
+              </Button>
               <Button variant="ghost" size="sm" asChild>
                 <a href="/my-bookings">
                   <Calendar className="w-4 h-4 mr-2" />
@@ -110,22 +122,22 @@ const Navbar = () => {
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    <User className="w-4 h-4 mr-2" />
-                    Account
+                  <Button variant="outline" size="sm" className="gap-2">
+                    {getRoleIcon()}
+                    <span className="hidden lg:inline">Account</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem onClick={() => navigate(getDashboardLink())}>
+                    {getRoleIcon()}
+                    <span className="ml-2">{getRoleLabel()}</span>
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/my-profile")}>
                     <User className="w-4 h-4 mr-2" />
                     My Profile
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={handleSwitchRole}>
-                    <RefreshCw className="w-4 h-4 mr-2" />
-                    Switch to {userRole === "provider" ? "Customer" : "Provider"} View
-                  </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive">
                     <LogOut className="w-4 h-4 mr-2" />
                     Logout
                   </DropdownMenuItem>
@@ -136,7 +148,7 @@ const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-foreground"
+            className="md:hidden text-foreground p-2"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
             <Menu size={24} />
@@ -145,26 +157,23 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 space-y-4 border-t border-border">
+          <div className="md:hidden py-4 space-y-3 border-t border-border animate-fade-in">
             {!isAuthenticated ? (
               <>
-                <a href="#services" className="block text-foreground hover:text-primary transition-colors">
-                  Services
+                <a href="/#services" className="block py-2 text-foreground hover:text-primary transition-colors font-medium">
+                  Sports
                 </a>
-                <a href="#about" className="block text-foreground hover:text-primary transition-colors">
-                  About
+                <a href="/browse-venues" className="block py-2 text-foreground hover:text-primary transition-colors font-medium">
+                  Browse Venues
                 </a>
-                <a href="#testimonials" className="block text-foreground hover:text-primary transition-colors">
-                  Testimonials
+                <a href="/#testimonials" className="block py-2 text-foreground hover:text-primary transition-colors font-medium">
+                  Reviews
                 </a>
-                <a href="#contact" className="block text-foreground hover:text-primary transition-colors">
-                  Contact
-                </a>
-                <div className="flex flex-col gap-2 pt-2">
-                  <Button variant="ghost" size="default" className="w-full" asChild>
+                <div className="flex flex-col gap-2 pt-3 border-t border-border">
+                  <Button variant="outline" size="default" className="w-full" asChild>
                     <a href="/login">Log In</a>
                   </Button>
-                  <Button variant="hero" size="default" className="w-full" asChild>
+                  <Button size="default" className="w-full" asChild>
                     <a href="/signup">Sign Up</a>
                   </Button>
                 </div>
@@ -172,23 +181,31 @@ const Navbar = () => {
             ) : (
               <div className="flex flex-col gap-2">
                 <Button variant="ghost" className="w-full justify-start" asChild>
+                  <a href="/browse-venues">
+                    <Home className="w-4 h-4 mr-2" />
+                    Browse Venues
+                  </a>
+                </Button>
+                <Button variant="ghost" className="w-full justify-start" asChild>
                   <a href="/my-bookings">
                     <Calendar className="w-4 h-4 mr-2" />
                     My Bookings
                   </a>
                 </Button>
+                <Button variant="ghost" className="w-full justify-start" onClick={() => navigate(getDashboardLink())}>
+                  {getRoleIcon()}
+                  <span className="ml-2">{getRoleLabel()}</span>
+                </Button>
                 <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/my-profile")}>
                   <User className="w-4 h-4 mr-2" />
                   My Profile
                 </Button>
-                <Button variant="ghost" className="w-full justify-start" onClick={handleSwitchRole}>
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Switch to {userRole === "provider" ? "Customer" : "Provider"} View
-                </Button>
-                <Button variant="ghost" className="w-full justify-start" onClick={handleLogout}>
-                  <LogOut className="w-4 h-4 mr-2" />
-                  Logout
-                </Button>
+                <div className="border-t border-border pt-2 mt-2">
+                  <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive" onClick={handleLogout}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </Button>
+                </div>
               </div>
             )}
           </div>
