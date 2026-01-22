@@ -121,7 +121,7 @@ const ManageVenues = () => {
                 <p className="text-sm text-muted-foreground mb-2">{venue.description}</p>
                 <p className="font-semibold mb-4">₹{venue.price_per_hour}/hour</p>
                 <p className="text-sm text-muted-foreground mb-4">
-                  Sport: {venue.sports.name}
+                  Sport: {venue.sports?.name || 'Not specified'}
                 </p>
                 <div className="flex gap-2">
                   <Button
