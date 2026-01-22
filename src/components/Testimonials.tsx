@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
-import { Star, Shield } from "lucide-react";
+import { Star, Shield, CheckCircle } from "lucide-react";
 
 const testimonials = [
   {
@@ -27,11 +27,13 @@ const Testimonials = () => {
     <section id="testimonials" className="py-16 sm:py-24 bg-background">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="text-center mb-12 sm:mb-16">
-          <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3">Testimonials</span>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4">
+          <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3 animate-fade-in-up">
+            Testimonials
+          </span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 animate-fade-in-up delay-100">
             Trusted by Players
           </h2>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in-up delay-200">
             Join thousands of satisfied players across India
           </p>
         </div>
@@ -40,8 +42,8 @@ const Testimonials = () => {
           {testimonials.map((testimonial, index) => (
             <Card
               key={testimonial.name}
-              className="border-border hover:shadow-xl hover:border-primary/20 transition-all duration-300 animate-fade-in"
-              style={{ animationDelay: `${index * 100}ms` }}
+              className="border-border hover:shadow-xl hover:border-primary/20 transition-all duration-300 hover-lift animate-fade-in-up"
+              style={{ animationDelay: `${(index + 3) * 100}ms` }}
             >
               <CardContent className="p-6 sm:p-8">
                 <div className="flex gap-1 mb-4">
@@ -61,7 +63,10 @@ const Testimonials = () => {
                       <span className="text-primary font-semibold">{testimonial.name.charAt(0)}</span>
                     </div>
                     <div>
-                      <div className="font-semibold text-sm sm:text-base">{testimonial.name}</div>
+                      <div className="font-semibold text-sm sm:text-base flex items-center gap-1.5">
+                        {testimonial.name}
+                        <CheckCircle className="h-4 w-4 text-primary" />
+                      </div>
                       <div className="text-xs sm:text-sm text-muted-foreground">{testimonial.role}</div>
                     </div>
                   </div>

@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Star, Shield, Smartphone, Clock } from "lucide-react";
+import { Search, MapPin, Star, Shield, Smartphone, Clock, CheckCircle, Play } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Sport {
@@ -91,20 +91,29 @@ const BrowseVenues = () => {
     <div className="min-h-screen flex flex-col bg-muted/30">
       <Navbar />
       <main className="flex-1 container mx-auto px-4 sm:px-6 py-8 sm:py-12 pt-24">
-        <div className="mb-8 sm:mb-10">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-3">Browse Venues</h1>
+        {/* Header */}
+        <div className="mb-8 sm:mb-10 animate-fade-in-up">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-2 sm:mb-3">
+            Book Your <span className="text-gradient">Venue</span>
+          </h1>
           <p className="text-muted-foreground text-base sm:text-lg">Find and book verified sports facilities near you</p>
+          
+          {/* Trust Indicators */}
           <div className="flex flex-wrap gap-3 mt-4">
-            <Badge variant="outline" className="gap-1.5 py-1.5 px-3">
+            <Badge className="verified-badge gap-1.5 py-1.5 px-3">
               <Shield className="h-3 w-3" /> All Venues Verified
             </Badge>
-            <Badge variant="outline" className="gap-1.5 py-1.5 px-3">
-              <Smartphone className="h-3 w-3" /> UPI Payments
+            <Badge variant="outline" className="gap-1.5 py-1.5 px-3 bg-background">
+              <Smartphone className="h-3 w-3 text-primary" /> UPI Payments
+            </Badge>
+            <Badge variant="outline" className="gap-1.5 py-1.5 px-3 bg-background">
+              <CheckCircle className="h-3 w-3 text-primary" /> Easy Cancellation
             </Badge>
           </div>
         </div>
 
-        <Card className="mb-6 sm:mb-8 p-4 sm:p-6 border-0 shadow-sm">
+        {/* Filters */}
+        <Card className="mb-6 sm:mb-8 p-4 sm:p-6 border-0 shadow-sm animate-fade-in-up delay-100">
           <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="flex-1 relative">
               <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 h-4 sm:h-5 w-4 sm:w-5 text-muted-foreground" />
@@ -129,13 +138,14 @@ const BrowseVenues = () => {
           </div>
         </Card>
 
+        {/* Venues Grid */}
         {loading ? (
           <div className="text-center py-16 sm:py-20">
             <div className="inline-block h-8 w-8 sm:h-10 sm:w-10 animate-spin rounded-full border-4 border-solid border-primary border-r-transparent"></div>
             <p className="mt-4 text-muted-foreground text-sm sm:text-base">Finding venues for you...</p>
           </div>
         ) : filteredVenues.length === 0 ? (
-          <Card className="text-center py-12 sm:py-16 border-dashed">
+          <Card className="text-center py-12 sm:py-16 border-dashed animate-fade-in-up">
             <CardContent>
               <Clock className="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
               <h3 className="text-lg font-semibold mb-2">No Venues Available Yet</h3>
@@ -145,11 +155,16 @@ const BrowseVenues = () => {
           </Card>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {filteredVenues.map((venue) => (
-              <Card key={venue.id} className="group overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 cursor-pointer">
+            {filteredVenues.map((venue, index) => (
+              <Card 
+                key={venue.id} 
+                className="group overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 cursor-pointer hover-lift animate-fade-in-up"
+                style={{ animationDelay: `${(index + 2) * 50}ms` }}
+              >
                 {venue.images && venue.images[0] ? (
                   <div className="relative h-44 sm:h-52 overflow-hidden">
-                    <img src={venue.images[0]} alt={venue.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    <img src={venue.images[0]} alt={venue.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-secondary/80 via-transparent to-transparent"></div>
                     <div className="absolute top-3 left-3">
                       <Badge className="bg-primary/90 backdrop-blur-sm">{venue.sports?.name}</Badge>
                     </div>
@@ -157,18 +172,26 @@ const BrowseVenues = () => {
                       <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm font-bold">₹{venue.price_per_hour}/hr</Badge>
                     </div>
                     <div className="absolute bottom-3 left-3">
-                      <Badge variant="outline" className="bg-background/80 backdrop-blur-sm text-xs gap-1">
-                        <Shield className="h-3 w-3" /> Verified
+                      <Badge className="verified-badge text-[10px] gap-1">
+                        <Shield className="h-2.5 w-2.5" /> Verified
                       </Badge>
                     </div>
                   </div>
                 ) : (
-                  <div className="h-44 sm:h-52 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                  <div className="h-44 sm:h-52 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center relative">
                     <MapPin className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/50" />
+                    <div className="absolute top-3 left-3">
+                      <Badge className="bg-primary/90">{venue.sports?.name}</Badge>
+                    </div>
+                    <div className="absolute top-3 right-3">
+                      <Badge variant="secondary" className="font-bold">₹{venue.price_per_hour}/hr</Badge>
+                    </div>
                   </div>
                 )}
                 <CardHeader className="pb-2 sm:pb-3 px-4 sm:px-5">
-                  <CardTitle className="text-lg sm:text-xl">{venue.name}</CardTitle>
+                  <CardTitle className="text-lg sm:text-xl flex items-center gap-2">
+                    {venue.name}
+                  </CardTitle>
                   <CardDescription className="flex items-center gap-1.5 text-xs sm:text-sm">
                     <MapPin className="h-3 w-3 sm:h-4 sm:w-4" />
                     {venue.location}
@@ -184,15 +207,20 @@ const BrowseVenues = () => {
                   )}
                   {venue.amenities && venue.amenities.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                      {venue.amenities.slice(0, 3).map((amenity, index) => (
-                        <span key={index} className="text-[10px] sm:text-xs bg-muted px-2 py-0.5 sm:py-1 rounded-full">{amenity}</span>
+                      {venue.amenities.slice(0, 3).map((amenity, idx) => (
+                        <span key={idx} className="text-[10px] sm:text-xs bg-muted px-2 py-0.5 sm:py-1 rounded-full">{amenity}</span>
                       ))}
                     </div>
                   )}
                 </CardContent>
                 <CardFooter className="pt-0 px-4 sm:px-5 pb-4 sm:pb-5">
-                  <Button onClick={() => navigate(`/book-venue/${venue.id}`)} className="w-full rounded-xl font-semibold h-10 sm:h-11 text-sm sm:text-base" size="lg">
-                    Book Now
+                  <Button 
+                    onClick={() => navigate(`/book-venue/${venue.id}`)} 
+                    className="w-full rounded-xl font-bold h-10 sm:h-11 text-sm sm:text-base btn-press" 
+                    size="lg"
+                  >
+                    <Play className="w-4 h-4 mr-1 fill-current" />
+                    BOOK NOW
                   </Button>
                 </CardFooter>
               </Card>
