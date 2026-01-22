@@ -714,7 +714,7 @@ const BookVenue = () => {
             <Card className="sticky top-24 animate-fade-in-up delay-200">
               <CardHeader className="bg-gradient-to-r from-primary/10 to-accent/10 border-b">
                 <CardTitle className="text-xl flex items-center gap-2">
-                  <Play className="h-5 w-5 fill-current" />
+                  <CalendarDays className="h-5 w-5" />
                   Book This Venue
                 </CardTitle>
                 <CardDescription>Select your preferred date and time slot</CardDescription>
