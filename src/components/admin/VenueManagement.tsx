@@ -55,8 +55,8 @@ const VenueManagement = () => {
         is_verified: v.is_verified,
         is_active: v.is_active,
         created_at: v.created_at,
-        provider_name: (v.profiles as any)?.full_name || 'Unknown',
-        sport_name: (v.sports as any)?.name || 'Unknown',
+        provider_name: v.profiles ? (v.profiles as any).full_name || 'Unknown' : 'Unknown',
+        sport_name: v.sports ? (v.sports as any).name || 'Unknown' : 'Unknown',
       })) || [];
       setVenues(formattedVenues);
       setFilteredVenues(formattedVenues);
