@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Clock, Star, CheckCircle, ArrowLeft, Smartphone, Shield, Copy, Check } from "lucide-react";
+import { MapPin, Clock, Star, CheckCircle, ArrowLeft, Smartphone, Shield, Copy, Check, CalendarDays, CreditCard, Play } from "lucide-react";
 
 interface Venue {
   id: string;
@@ -23,6 +23,7 @@ interface Venue {
   amenities: string[] | null;
   average_rating: number | null;
   total_reviews: number | null;
+  venue_notes: string | null;
   sports: { name: string };
 }
 
@@ -35,6 +36,61 @@ interface GeneratedSlot {
 
 // UPI Details - Replace with actual venue owner's UPI
 const UPI_ID = "sportspot@upi";
+
+// Step Indicator Component
+const StepIndicator = ({ currentStep }: { currentStep: number }) => {
+  const steps = [
+    { num: 1, label: "Select Venue", icon: MapPin },
+    { num: 2, label: "Choose Slot", icon: CalendarDays },
+    { num: 3, label: "Payment", icon: CreditCard },
+    { num: 4, label: "Confirmed", icon: CheckCircle },
+  ];
+
+  return (
+    <div className="w-full mb-8">
+      <div className="flex items-center justify-between relative">
+        {/* Progress Line */}
+        <div className="absolute top-5 left-0 right-0 h-0.5 bg-muted -z-10">
+          <div 
+            className="h-full bg-primary transition-all duration-500"
+            style={{ width: `${((currentStep - 1) / (steps.length - 1)) * 100}%` }}
+          />
+        </div>
+        
+        {steps.map((step) => {
+          const Icon = step.icon;
+          const isCompleted = currentStep > step.num;
+          const isCurrent = currentStep === step.num;
+          
+          return (
+            <div key={step.num} className="flex flex-col items-center">
+              <div 
+                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 ${
+                  isCompleted 
+                    ? "bg-primary text-primary-foreground" 
+                    : isCurrent 
+                    ? "bg-primary text-primary-foreground ring-4 ring-primary/20" 
+                    : "bg-muted text-muted-foreground"
+                }`}
+              >
+                {isCompleted ? (
+                  <Check className="h-5 w-5" />
+                ) : (
+                  <Icon className="h-5 w-5" />
+                )}
+              </div>
+              <span className={`text-xs mt-2 font-medium ${
+                isCurrent ? "text-primary" : isCompleted ? "text-foreground" : "text-muted-foreground"
+              }`}>
+                {step.label}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+};
 
 const BookVenue = () => {
   const { venueId } = useParams();
@@ -50,6 +106,14 @@ const BookVenue = () => {
   const [step, setStep] = useState<"select" | "payment" | "success">("select");
   const [bookingResult, setBookingResult] = useState<any>(null);
   const [upiCopied, setUpiCopied] = useState(false);
+
+  // Calculate current step number for indicator
+  const getCurrentStepNumber = () => {
+    if (step === "success") return 4;
+    if (step === "payment") return 3;
+    if (selectedSlot && selectedDate) return 2;
+    return 1;
+  };
 
   useEffect(() => {
     fetchVenue();
@@ -85,7 +149,6 @@ const BookVenue = () => {
 
     const dateStr = selectedDate.toISOString().split("T")[0];
     
-    // Get already booked slots for this date
     const { data: bookedSlots } = await supabase
       .from("bookings")
       .select("start_time, end_time")
@@ -93,7 +156,6 @@ const BookVenue = () => {
       .eq("booking_date", dateStr)
       .in("status", ["confirmed", "pending"]);
 
-    // Generate slots from 6 AM to 10 PM (1-hour slots)
     const slots: GeneratedSlot[] = [];
     for (let hour = 6; hour < 22; hour++) {
       const startHour = hour.toString().padStart(2, "0");
@@ -101,13 +163,11 @@ const BookVenue = () => {
       const start_time = `${startHour}:00:00`;
       const end_time = `${endHour}:00:00`;
 
-      // Check if slot is booked
       const isBooked = bookedSlots?.some(
         (b) => b.start_time === start_time || 
         (b.start_time < end_time && b.end_time > start_time)
       ) || false;
 
-      // Check if slot is in the past for today
       const now = new Date();
       const isToday = selectedDate.toDateString() === now.toDateString();
       const isPast = isToday && hour <= now.getHours();
@@ -155,7 +215,6 @@ const BookVenue = () => {
 
     const totalAmount = venue.price_per_hour;
 
-    // Create booking with pending status (awaiting payment verification)
     const { data, error } = await supabase
       .from("bookings")
       .insert({
@@ -178,7 +237,6 @@ const BookVenue = () => {
       return;
     }
 
-    // Create payment record for verification
     await supabase.from("payments").insert({
       booking_id: data.id,
       amount: totalAmount,
@@ -210,52 +268,55 @@ const BookVenue = () => {
     return (
       <div className="min-h-screen flex flex-col bg-muted/30">
         <Navbar />
-        <main className="flex-1 container mx-auto px-4 py-12 pt-24 flex items-center justify-center">
-          <Card className="max-w-lg w-full text-center">
-            <CardContent className="pt-8 pb-8">
-              <div className="h-20 w-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
-                <Clock className="h-10 w-10 text-primary" />
-              </div>
-              <h2 className="text-2xl font-bold mb-2">Booking Submitted! 🎉</h2>
-              <p className="text-muted-foreground mb-6">
-                Your booking is pending confirmation. The venue owner will verify your payment and confirm shortly.
-              </p>
-              
-              <div className="bg-muted/50 rounded-xl p-4 mb-6 text-left space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Venue</span>
-                  <span className="font-semibold">{bookingResult.venue_name}</span>
+        <main className="flex-1 container mx-auto px-4 py-12 pt-24">
+          <div className="max-w-lg mx-auto">
+            <StepIndicator currentStep={4} />
+            <Card className="text-center animate-scale-in">
+              <CardContent className="pt-8 pb-8">
+                <div className="h-20 w-20 rounded-full bg-primary/15 flex items-center justify-center mx-auto mb-6">
+                  <CheckCircle className="h-10 w-10 text-primary" />
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Date</span>
-                  <span className="font-semibold">{new Date(bookingResult.booking_date).toLocaleDateString("en-IN")}</span>
+                <h2 className="text-2xl font-bold mb-2">Booking Submitted! 🎉</h2>
+                <p className="text-muted-foreground mb-6">
+                  Your booking is pending confirmation. The venue owner will verify your payment and confirm shortly.
+                </p>
+                
+                <div className="bg-muted/50 rounded-xl p-4 mb-6 text-left space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Venue</span>
+                    <span className="font-semibold">{bookingResult.venue_name}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Date</span>
+                    <span className="font-semibold">{new Date(bookingResult.booking_date).toLocaleDateString("en-IN")}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Time</span>
+                    <span className="font-semibold">{bookingResult.slot_label}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-muted-foreground">Amount</span>
+                    <span className="font-semibold">₹{bookingResult.total_amount}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-muted-foreground">Status</span>
+                    <Badge variant="outline" className="bg-warning/10 text-warning border-warning/30">
+                      Pending Confirmation
+                    </Badge>
+                  </div>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Time</span>
-                  <span className="font-semibold">{bookingResult.slot_label}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">Amount</span>
-                  <span className="font-semibold">₹{bookingResult.total_amount}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-muted-foreground">Status</span>
-                  <Badge variant="outline" className="bg-primary/10 text-primary border-primary/30">
-                    Pending Confirmation
-                  </Badge>
-                </div>
-              </div>
 
-              <div className="flex flex-col gap-3">
-                <Button onClick={() => navigate("/my-bookings")} className="w-full">
-                  View My Bookings
-                </Button>
-                <Button variant="outline" onClick={() => navigate("/browse-venues")} className="w-full">
-                  Browse More Venues
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                <div className="flex flex-col gap-3">
+                  <Button onClick={() => navigate("/my-bookings")} className="w-full btn-press">
+                    View My Bookings
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate("/browse-venues")} className="w-full">
+                    Book More Venues
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </main>
         <Footer />
       </div>
@@ -268,18 +329,20 @@ const BookVenue = () => {
       <div className="min-h-screen flex flex-col bg-muted/30">
         <Navbar />
         <main className="flex-1 container mx-auto px-4 py-12 pt-24">
-          <Button 
-            variant="ghost" 
-            onClick={() => setStep("select")} 
-            className="mb-6"
-          >
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to Selection
-          </Button>
-
           <div className="max-w-2xl mx-auto">
-            <Card>
-              <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 border-b">
+            <StepIndicator currentStep={3} />
+            
+            <Button 
+              variant="ghost" 
+              onClick={() => setStep("select")} 
+              className="mb-6"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Selection
+            </Button>
+
+            <Card className="animate-fade-in-up">
+              <CardHeader className="bg-gradient-to-r from-primary/10 to-accent/10 border-b">
                 <CardTitle className="text-2xl flex items-center gap-2">
                   <Smartphone className="h-6 w-6" />
                   Pay via UPI
@@ -324,7 +387,6 @@ const BookVenue = () => {
                     Secure UPI Payment
                   </div>
 
-                  {/* UPI ID */}
                   <div className="p-4 bg-muted rounded-xl">
                     <p className="text-sm text-muted-foreground mb-2 text-center">Pay to UPI ID</p>
                     <div className="flex items-center justify-center gap-2">
@@ -335,13 +397,13 @@ const BookVenue = () => {
                         variant="outline"
                         size="icon"
                         onClick={handleCopyUPI}
+                        className="btn-press"
                       >
                         {upiCopied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
                       </Button>
                     </div>
                   </div>
 
-                  {/* Payment Instructions */}
                   <div className="bg-warning/10 border border-warning/30 rounded-xl p-4">
                     <h4 className="font-semibold text-warning mb-2">Payment Instructions</h4>
                     <ol className="text-sm text-muted-foreground space-y-2">
@@ -352,7 +414,6 @@ const BookVenue = () => {
                     </ol>
                   </div>
 
-                  {/* Notes */}
                   <div>
                     <Label htmlFor="notes" className="text-base font-semibold">
                       Additional Notes <span className="text-muted-foreground font-normal">(Optional)</span>
@@ -367,11 +428,10 @@ const BookVenue = () => {
                   </div>
                 </div>
 
-                {/* Confirm Button */}
                 <Button
                   onClick={handlePaymentConfirmation}
                   disabled={loading}
-                  className="w-full h-14 text-lg font-semibold rounded-xl"
+                  className="w-full h-14 text-lg font-semibold rounded-xl btn-press"
                   size="lg"
                 >
                   {loading ? (
@@ -403,6 +463,8 @@ const BookVenue = () => {
     <div className="min-h-screen flex flex-col bg-muted/30">
       <Navbar />
       <main className="flex-1 container mx-auto px-4 py-12 pt-24">
+        <StepIndicator currentStep={getCurrentStepNumber()} />
+        
         <Button 
           variant="outline" 
           onClick={() => navigate("/browse-venues")} 
@@ -415,7 +477,7 @@ const BookVenue = () => {
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-8">
           {/* Venue Details - Left Side */}
           <div className="lg:col-span-3 space-y-6">
-            <Card className="overflow-hidden">
+            <Card className="overflow-hidden animate-fade-in-up">
               {venue.images && venue.images[0] ? (
                 <div className="relative h-72 md:h-80 overflow-hidden">
                   <img
@@ -423,10 +485,10 @@ const BookVenue = () => {
                     alt={venue.name}
                     className="w-full h-full object-cover"
                   />
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-foreground/95 to-transparent p-6">
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-secondary/95 to-transparent p-6">
                     <div className="flex items-center gap-2 mb-2">
                       <Badge className="bg-primary">{venue.sports?.name}</Badge>
-                      <Badge variant="outline" className="bg-background/80 text-foreground border-0">
+                      <Badge className="verified-badge">
                         <Shield className="h-3 w-3 mr-1" />
                         Verified
                       </Badge>
@@ -439,10 +501,10 @@ const BookVenue = () => {
                   </div>
                 </div>
               ) : (
-                <div className="p-6 bg-gradient-to-r from-primary/10 to-primary/5">
+                <div className="p-6 bg-gradient-to-r from-primary/10 to-accent/10">
                   <div className="flex items-center gap-2 mb-2">
                     <Badge className="bg-primary">{venue.sports?.name}</Badge>
-                    <Badge variant="outline">
+                    <Badge className="verified-badge">
                       <Shield className="h-3 w-3 mr-1" />
                       Verified
                     </Badge>
@@ -456,7 +518,7 @@ const BookVenue = () => {
               )}
             </Card>
 
-            <Card>
+            <Card className="animate-fade-in-up delay-100">
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <CardTitle>About This Venue</CardTitle>
@@ -500,22 +562,35 @@ const BookVenue = () => {
                     </div>
                   </div>
                 )}
+
+                {venue.venue_notes && (
+                  <div className="bg-muted/50 rounded-xl p-4">
+                    <h3 className="font-semibold text-lg mb-2">Venue Rules & Notes</h3>
+                    <p className="text-sm text-muted-foreground whitespace-pre-line">
+                      {venue.venue_notes}
+                    </p>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
 
           {/* Booking Form - Right Side */}
           <div className="lg:col-span-2">
-            <Card className="sticky top-24">
-              <CardHeader className="bg-gradient-to-r from-primary/10 to-primary/5 border-b">
-                <CardTitle className="text-xl">Book This Venue</CardTitle>
+            <Card className="sticky top-24 animate-fade-in-up delay-200">
+              <CardHeader className="bg-gradient-to-r from-primary/10 to-accent/10 border-b">
+                <CardTitle className="text-xl flex items-center gap-2">
+                  <Play className="h-5 w-5 fill-current" />
+                  Book This Venue
+                </CardTitle>
                 <CardDescription>Select your preferred date and time slot</CardDescription>
               </CardHeader>
               <CardContent className="pt-6 space-y-6">
                 {/* Step 1: Select Date */}
                 <div>
-                  <Label className="text-base font-semibold mb-3 block">
-                    1. Select Date
+                  <Label className="text-base font-semibold mb-3 flex items-center gap-2">
+                    <span className="w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm flex items-center justify-center">1</span>
+                    Select Date
                   </Label>
                   <div className="border rounded-xl p-3 flex justify-center">
                     <Calendar
@@ -530,8 +605,11 @@ const BookVenue = () => {
 
                 {/* Step 2: Select Time Slot */}
                 <div>
-                  <Label className="text-base font-semibold mb-3 block">
-                    2. Select Time Slot
+                  <Label className="text-base font-semibold mb-3 flex items-center gap-2">
+                    <span className={`w-6 h-6 rounded-full text-sm flex items-center justify-center ${
+                      selectedDate ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+                    }`}>2</span>
+                    Select Time Slot
                   </Label>
                   {!selectedDate ? (
                     <div className="text-center py-8 text-muted-foreground border rounded-xl bg-muted/30">
@@ -550,7 +628,7 @@ const BookVenue = () => {
                           key={slot.start_time}
                           onClick={() => !slot.isBooked && setSelectedSlot(slot)}
                           disabled={slot.isBooked}
-                          className={`p-3 rounded-lg text-sm font-medium transition-all border ${
+                          className={`p-3 rounded-lg text-sm font-medium transition-all border btn-press ${
                             slot.isBooked
                               ? "bg-muted text-muted-foreground cursor-not-allowed opacity-50"
                               : selectedSlot?.start_time === slot.start_time
@@ -567,7 +645,7 @@ const BookVenue = () => {
 
                 {/* Price Summary */}
                 {selectedSlot && (
-                  <div className="border rounded-xl p-4 space-y-2 bg-muted/30">
+                  <div className="border rounded-xl p-4 space-y-2 bg-muted/30 animate-scale-in">
                     <div className="flex justify-between text-sm">
                       <span className="text-muted-foreground">Selected Slot</span>
                       <span className="font-medium">{selectedSlot.label}</span>
@@ -587,9 +665,10 @@ const BookVenue = () => {
                 <Button
                   onClick={handleProceedToPayment}
                   disabled={!selectedDate || !selectedSlot}
-                  className="w-full h-12 text-base font-semibold rounded-xl"
+                  className="w-full h-12 text-base font-semibold rounded-xl btn-press"
                   size="lg"
                 >
+                  <CreditCard className="h-5 w-5 mr-2" />
                   Proceed to Payment
                 </Button>
 

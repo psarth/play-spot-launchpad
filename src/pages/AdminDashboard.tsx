@@ -10,6 +10,7 @@ import ProviderManagement from "@/components/admin/ProviderManagement";
 import BookingManagement from "@/components/admin/BookingManagement";
 import PaymentManagement from "@/components/admin/PaymentManagement";
 import SystemSettings from "@/components/admin/SystemSettings";
+import VenueManagement from "@/components/admin/VenueManagement";
 import { 
   LayoutDashboard, 
   Users, 
@@ -17,7 +18,8 @@ import {
   CalendarDays, 
   CreditCard,
   Settings,
-  Shield
+  Shield,
+  MapPin
 } from "lucide-react";
 
 const AdminDashboard = () => {
@@ -74,7 +76,7 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-muted/30">
       <Navbar />
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 pt-24">
         <div className="flex items-center gap-3 mb-8">
           <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center">
             <Shield className="h-6 w-6 text-primary-foreground" />
@@ -86,13 +88,20 @@ const AdminDashboard = () => {
         </div>
 
         <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid grid-cols-2 md:grid-cols-6 h-auto gap-2 bg-transparent p-0">
+          <TabsList className="grid grid-cols-3 md:grid-cols-7 h-auto gap-2 bg-transparent p-0">
             <TabsTrigger 
               value="overview" 
               className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl px-4 py-3 border border-border bg-card"
             >
               <LayoutDashboard className="h-4 w-4" />
               <span className="hidden sm:inline">Overview</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="venues"
+              className="flex items-center gap-2 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-xl px-4 py-3 border border-border bg-card"
+            >
+              <MapPin className="h-4 w-4" />
+              <span className="hidden sm:inline">Venues</span>
             </TabsTrigger>
             <TabsTrigger 
               value="customers"
@@ -133,6 +142,9 @@ const AdminDashboard = () => {
 
           <TabsContent value="overview">
             <AdminOverview />
+          </TabsContent>
+          <TabsContent value="venues">
+            <VenueManagement />
           </TabsContent>
           <TabsContent value="customers">
             <CustomerManagement />
