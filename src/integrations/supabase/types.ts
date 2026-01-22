@@ -330,6 +330,7 @@ export type Database = {
           id: string
           images: string[] | null
           is_active: boolean | null
+          is_verified: boolean | null
           location: string
           name: string
           price_per_hour: number
@@ -337,6 +338,8 @@ export type Database = {
           sport_id: string
           total_reviews: number | null
           updated_at: string
+          venue_notes: string | null
+          verification_status: string | null
         }
         Insert: {
           address?: string | null
@@ -347,6 +350,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           is_active?: boolean | null
+          is_verified?: boolean | null
           location: string
           name: string
           price_per_hour: number
@@ -354,6 +358,8 @@ export type Database = {
           sport_id: string
           total_reviews?: number | null
           updated_at?: string
+          venue_notes?: string | null
+          verification_status?: string | null
         }
         Update: {
           address?: string | null
@@ -364,6 +370,7 @@ export type Database = {
           id?: string
           images?: string[] | null
           is_active?: boolean | null
+          is_verified?: boolean | null
           location?: string
           name?: string
           price_per_hour?: number
@@ -371,6 +378,8 @@ export type Database = {
           sport_id?: string
           total_reviews?: number | null
           updated_at?: string
+          venue_notes?: string | null
+          verification_status?: string | null
         }
         Relationships: [
           {

@@ -34,13 +34,13 @@ const Services = () => {
   const navigate = useNavigate();
 
   return (
-    <section id="services" className="py-16 sm:py-24 bg-muted/50">
+    <section id="services" className="py-16 sm:py-24 bg-secondary/50">
       <div className="container mx-auto px-4 sm:px-6">
         <div className="text-center mb-12 sm:mb-16">
           <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-3 animate-fade-in-up">
             Our Sports
           </span>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 animate-fade-in-up delay-100">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-4 text-foreground animate-fade-in-up delay-100">
             Popular Sports
           </h2>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in-up delay-200">
@@ -53,7 +53,7 @@ const Services = () => {
             <Card
               key={sport.title}
               onClick={() => navigate("/browse-venues")}
-              className="group overflow-hidden border-border hover:shadow-xl hover:border-primary/30 transition-all duration-300 cursor-pointer hover-lift animate-fade-in-up"
+              className="group overflow-hidden border-border/50 bg-card hover:shadow-xl hover:border-primary/30 transition-all duration-300 cursor-pointer hover-lift animate-fade-in-up"
               style={{ animationDelay: `${(index + 3) * 100}ms` }}
             >
               <CardContent className="p-0">
@@ -63,7 +63,7 @@ const Services = () => {
                     alt={sport.title}
                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-secondary/90 via-secondary/40 to-transparent"></div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-secondary/95 via-secondary/50 to-transparent"></div>
                   <div className="absolute top-3 right-3">
                     <Badge className="verified-badge gap-1">
                       <Shield className="h-3 w-3" />
