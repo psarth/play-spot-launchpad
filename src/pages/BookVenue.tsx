@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -10,7 +10,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { MapPin, Clock, Star, CheckCircle, ArrowLeft, Smartphone, Shield, Copy, Check, CalendarDays, CreditCard, Play } from "lucide-react";
+import { MapPin, Clock, Star, CheckCircle, ArrowLeft, Smartphone, Shield, Copy, Check, CalendarDays, CreditCard, Lock, AlertTriangle } from "lucide-react";
+import { SlotLockTimer } from "@/components/booking/SlotLockTimer";
+import { useRealtimeBookings } from "@/hooks/useRealtimeBookings";
 
 interface Venue {
   id: string;
@@ -106,6 +108,23 @@ const BookVenue = () => {
   const [step, setStep] = useState<"select" | "payment" | "success">("select");
   const [bookingResult, setBookingResult] = useState<any>(null);
   const [upiCopied, setUpiCopied] = useState(false);
+  const [slotLockId, setSlotLockId] = useState<string | null>(null);
+  const [lockTimeRemaining, setLockTimeRemaining] = useState(0);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  // Get current user
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      setCurrentUserId(user?.id || null);
+    });
+  }, []);
+
+  // Realtime slot updates
+  const { isSlotLocked, isSlotBooked, refreshSlots } = useRealtimeBookings({
+    venueId: venueId || "",
+    selectedDate: selectedDate?.toISOString().split("T")[0],
+    onBookingChange: () => generateTimeSlots(),
+  });
 
   // Calculate current step number for indicator
   const getCurrentStepNumber = () => {
@@ -196,8 +215,123 @@ const BookVenue = () => {
       toast({ title: "Please select date and time", variant: "destructive" });
       return;
     }
-    setStep("payment");
+
+    // Lock the slot before proceeding to payment
+    setLoading(true);
+    try {
+      // Release expired locks first
+      try {
+        await supabase.rpc('release_expired_slot_locks');
+      } catch (e) {
+        // Ignore if RPC doesn't exist
+      }
+
+      const dateStr = selectedDate.toISOString().split("T")[0];
+
+      // Check if slot is already booked
+      const { data: existingBooking } = await supabase
+        .from("bookings")
+        .select("id")
+        .eq("venue_id", venueId)
+        .eq("booking_date", dateStr)
+        .eq("start_time", selectedSlot.start_time)
+        .in("status", ["pending", "confirmed"])
+        .maybeSingle();
+
+      if (existingBooking) {
+        toast({ title: "This slot has already been booked", variant: "destructive" });
+        generateTimeSlots();
+        setLoading(false);
+        return;
+      }
+
+      // Check for existing lock by another user
+      const { data: existingLock } = await supabase
+        .from("slot_locks")
+        .select("*")
+        .eq("venue_id", venueId)
+        .eq("slot_date", dateStr)
+        .eq("start_time", selectedSlot.start_time)
+        .eq("status", "active")
+        .maybeSingle();
+
+      if (existingLock && existingLock.locked_by !== user.id) {
+        toast({ 
+          title: "Slot is being booked by another user", 
+          description: "Please try again in a few minutes or select a different slot.",
+          variant: "destructive" 
+        });
+        setLoading(false);
+        return;
+      }
+
+      // Create or reuse lock
+      let lockId = existingLock?.id;
+      if (!existingLock) {
+        const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
+        const { data: newLock, error: lockError } = await supabase
+          .from("slot_locks")
+          .insert({
+            venue_id: venueId,
+            slot_date: dateStr,
+            start_time: selectedSlot.start_time,
+            end_time: selectedSlot.end_time,
+            locked_by: user.id,
+            expires_at: expiresAt,
+            status: "active",
+          })
+          .select()
+          .single();
+
+        if (lockError) {
+          toast({ 
+            title: "Could not reserve slot", 
+            description: "Please try again.",
+            variant: "destructive" 
+          });
+          setLoading(false);
+          return;
+        }
+        lockId = newLock.id;
+        setLockTimeRemaining(600); // 10 minutes in seconds
+      } else {
+        const remaining = Math.max(0, Math.floor((new Date(existingLock.expires_at).getTime() - Date.now()) / 1000));
+        setLockTimeRemaining(remaining);
+      }
+
+      setSlotLockId(lockId);
+      setStep("payment");
+    } catch (error) {
+      toast({ title: "An error occurred", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
   };
+
+  // Timer countdown effect
+  useEffect(() => {
+    if (step !== "payment" || lockTimeRemaining <= 0) return;
+
+    const timer = setInterval(() => {
+      setLockTimeRemaining((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          toast({ 
+            title: "Slot reservation expired", 
+            description: "Please select a slot again.",
+            variant: "destructive" 
+          });
+          setStep("select");
+          setSlotLockId(null);
+          generateTimeSlots();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [step, lockTimeRemaining]);
 
   const handleCopyUPI = () => {
     navigator.clipboard.writeText(UPI_ID);
