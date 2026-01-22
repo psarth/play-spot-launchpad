@@ -17,6 +17,7 @@ export type Database = {
       bookings: {
         Row: {
           booking_date: string
+          commission_percentage: number | null
           created_at: string
           customer_id: string
           end_time: string
@@ -24,6 +25,9 @@ export type Database = {
           notes: string | null
           payment_intent_id: string | null
           payment_status: string
+          platform_commission: number | null
+          provider_payout: number | null
+          slot_lock_id: string | null
           start_time: string
           status: string
           total_amount: number
@@ -32,6 +36,7 @@ export type Database = {
         }
         Insert: {
           booking_date: string
+          commission_percentage?: number | null
           created_at?: string
           customer_id: string
           end_time: string
@@ -39,6 +44,9 @@ export type Database = {
           notes?: string | null
           payment_intent_id?: string | null
           payment_status?: string
+          platform_commission?: number | null
+          provider_payout?: number | null
+          slot_lock_id?: string | null
           start_time: string
           status?: string
           total_amount: number
@@ -47,6 +55,7 @@ export type Database = {
         }
         Update: {
           booking_date?: string
+          commission_percentage?: number | null
           created_at?: string
           customer_id?: string
           end_time?: string
@@ -54,6 +63,9 @@ export type Database = {
           notes?: string | null
           payment_intent_id?: string | null
           payment_status?: string
+          platform_commission?: number | null
+          provider_payout?: number | null
+          slot_lock_id?: string | null
           start_time?: string
           status?: string
           total_amount?: number
@@ -66,6 +78,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_slot_lock_id_fkey"
+            columns: ["slot_lock_id"]
+            isOneToOne: false
+            referencedRelation: "slot_locks"
             referencedColumns: ["id"]
           },
           {
@@ -118,6 +137,86 @@ export type Database = {
           },
         ]
       }
+      payouts: {
+        Row: {
+          booking_id: string
+          commission_amount: number
+          commission_percentage: number
+          created_at: string
+          gross_amount: number
+          id: string
+          net_amount: number
+          payout_date: string | null
+          provider_id: string
+          status: string
+          transaction_reference: string | null
+          updated_at: string
+        }
+        Insert: {
+          booking_id: string
+          commission_amount: number
+          commission_percentage: number
+          created_at?: string
+          gross_amount: number
+          id?: string
+          net_amount: number
+          payout_date?: string | null
+          provider_id: string
+          status?: string
+          transaction_reference?: string | null
+          updated_at?: string
+        }
+        Update: {
+          booking_id?: string
+          commission_amount?: number
+          commission_percentage?: number
+          created_at?: string
+          gross_amount?: number
+          id?: string
+          net_amount?: number
+          payout_date?: string | null
+          provider_id?: string
+          status?: string
+          transaction_reference?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      platform_settings: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          setting_key: string
+          setting_value: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key: string
+          setting_value: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          setting_key?: string
+          setting_value?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -145,6 +244,45 @@ export type Database = {
           is_suspended?: boolean | null
           phone?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      provider_bank_details: {
+        Row: {
+          account_holder_name: string
+          account_number: string
+          bank_name: string
+          created_at: string
+          id: string
+          ifsc_code: string
+          is_verified: boolean | null
+          provider_id: string
+          updated_at: string
+          upi_id: string | null
+        }
+        Insert: {
+          account_holder_name: string
+          account_number: string
+          bank_name: string
+          created_at?: string
+          id?: string
+          ifsc_code: string
+          is_verified?: boolean | null
+          provider_id: string
+          updated_at?: string
+          upi_id?: string | null
+        }
+        Update: {
+          account_holder_name?: string
+          account_number?: string
+          bank_name?: string
+          created_at?: string
+          id?: string
+          ifsc_code?: string
+          is_verified?: boolean | null
+          provider_id?: string
+          updated_at?: string
+          upi_id?: string | null
         }
         Relationships: []
       }
@@ -189,6 +327,63 @@ export type Database = {
           },
           {
             foreignKeyName: "reviews_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      slot_locks: {
+        Row: {
+          booking_id: string | null
+          created_at: string
+          end_time: string
+          expires_at: string
+          id: string
+          locked_at: string
+          locked_by: string
+          slot_date: string
+          start_time: string
+          status: string
+          venue_id: string
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string
+          end_time: string
+          expires_at: string
+          id?: string
+          locked_at?: string
+          locked_by: string
+          slot_date: string
+          start_time: string
+          status?: string
+          venue_id: string
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string
+          end_time?: string
+          expires_at?: string
+          id?: string
+          locked_at?: string
+          locked_by?: string
+          slot_date?: string
+          start_time?: string
+          status?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "slot_locks_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "slot_locks_venue_id_fkey"
             columns: ["venue_id"]
             isOneToOne: false
             referencedRelation: "venues"
@@ -403,6 +598,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      release_expired_slot_locks: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "customer" | "provider" | "admin"

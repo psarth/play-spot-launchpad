@@ -3,14 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { CalendarDays, Clock, IndianRupee, Building2, Star, BarChart3 } from "lucide-react";
+import { CalendarDays, Clock, IndianRupee, Building2, Star, BarChart3, Wallet, CreditCard } from "lucide-react";
 import ManageVenues from "@/components/provider/ManageVenues";
 import ManageBookings from "@/components/provider/ManageBookings";
 import ManageTimeSlots from "@/components/provider/ManageTimeSlots";
 import ProviderAnalytics from "@/components/provider/ProviderAnalytics";
+import ProviderPayouts from "@/components/provider/ProviderPayouts";
+import ProviderBankDetails from "@/components/provider/ProviderBankDetails";
 
 interface DashboardStats {
   todayBookings: number;
@@ -248,6 +250,20 @@ const ProviderDashboard = () => {
               <BarChart3 className="h-4 w-4 mr-1 hidden sm:inline" />
               Analytics
             </TabsTrigger>
+            <TabsTrigger 
+              value="payouts" 
+              className="rounded-lg text-xs sm:text-sm px-3 sm:px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <Wallet className="h-4 w-4 mr-1 hidden sm:inline" />
+              Payouts
+            </TabsTrigger>
+            <TabsTrigger 
+              value="bank" 
+              className="rounded-lg text-xs sm:text-sm px-3 sm:px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <CreditCard className="h-4 w-4 mr-1 hidden sm:inline" />
+              Bank
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="bookings">
@@ -264,6 +280,14 @@ const ProviderDashboard = () => {
 
           <TabsContent value="analytics">
             <ProviderAnalytics />
+          </TabsContent>
+
+          <TabsContent value="payouts">
+            <ProviderPayouts />
+          </TabsContent>
+
+          <TabsContent value="bank">
+            <ProviderBankDetails />
           </TabsContent>
         </Tabs>
       </main>
