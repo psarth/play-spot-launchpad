@@ -19,11 +19,11 @@ interface Booking {
   venues: {
     name: string;
     location: string;
-  };
+  } | null;
   profiles: {
     full_name: string;
     phone: string | null;
-  };
+  } | null;
 }
 
 const ManageBookings = () => {
@@ -170,10 +170,10 @@ const ManageBookings = () => {
               <CardHeader className="pb-3">
                 <div className="flex flex-col sm:flex-row justify-between items-start gap-3">
                   <div>
-                    <CardTitle className="text-lg">{booking.venues.name}</CardTitle>
+                    <CardTitle className="text-lg">{booking.venues?.name || 'Unknown Venue'}</CardTitle>
                     <CardDescription className="flex items-center gap-1 mt-1">
                       <MapPin className="h-4 w-4" />
-                      {booking.venues.location}
+                      {booking.venues?.location || 'Unknown Location'}
                     </CardDescription>
                   </div>
                   <StatusBadge status={booking.status} />
@@ -187,11 +187,11 @@ const ManageBookings = () => {
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">Customer</p>
-                      <p className="font-semibold text-sm">{booking.profiles.full_name}</p>
+                      <p className="font-semibold text-sm">{booking.profiles?.full_name || 'Unknown Customer'}</p>
                     </div>
                   </div>
                   
-                  {booking.profiles.phone && (
+                  {booking.profiles?.phone && (
                     <div className="flex items-center gap-3">
                       <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
                         <Phone className="h-4 w-4 text-primary" />
