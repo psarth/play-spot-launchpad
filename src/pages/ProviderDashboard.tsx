@@ -6,10 +6,11 @@ import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { CalendarDays, Clock, IndianRupee, Building2, Star } from "lucide-react";
+import { CalendarDays, Clock, IndianRupee, Building2, Star, BarChart3 } from "lucide-react";
 import ManageVenues from "@/components/provider/ManageVenues";
 import ManageBookings from "@/components/provider/ManageBookings";
 import ManageTimeSlots from "@/components/provider/ManageTimeSlots";
+import ProviderAnalytics from "@/components/provider/ProviderAnalytics";
 
 interface DashboardStats {
   todayBookings: number;
@@ -240,6 +241,13 @@ const ProviderDashboard = () => {
             >
               Time Slots
             </TabsTrigger>
+            <TabsTrigger 
+              value="analytics" 
+              className="rounded-lg text-xs sm:text-sm px-3 sm:px-4 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground"
+            >
+              <BarChart3 className="h-4 w-4 mr-1 hidden sm:inline" />
+              Analytics
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="bookings">
@@ -252,6 +260,10 @@ const ProviderDashboard = () => {
 
           <TabsContent value="timeslots">
             <ManageTimeSlots />
+          </TabsContent>
+
+          <TabsContent value="analytics">
+            <ProviderAnalytics />
           </TabsContent>
         </Tabs>
       </main>
