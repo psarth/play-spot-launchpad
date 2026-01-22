@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, User, Calendar, LogOut, Home, Building2, Shield } from "lucide-react";
+import { Menu, User, Calendar, LogOut, Home, Building2, Shield, Play } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -67,7 +67,15 @@ const Navbar = () => {
   };
 
   // Only customers see Browse and My Bookings
-  const isCustomer = userRole === "customer" || !userRole;
+  const isCustomer = userRole === "customer";
+
+  const handleBookNow = () => {
+    if (isAuthenticated) {
+      navigate("/browse-venues");
+    } else {
+      navigate("/login");
+    }
+  };
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
@@ -75,7 +83,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <a href="/" className="flex items-center space-x-2">
-            <div className="w-9 h-9 bg-gradient-to-br from-primary to-accent rounded-xl flex items-center justify-center shadow-md">
+            <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-md">
               <span className="text-primary-foreground font-bold text-lg">S</span>
             </div>
             <span className="text-xl font-bold text-foreground">
@@ -90,8 +98,8 @@ const Navbar = () => {
                 <a href="/#services" className="text-foreground hover:text-primary transition-colors font-medium">
                   Sports
                 </a>
-                <a href="/browse-venues" className="text-foreground hover:text-primary transition-colors font-medium">
-                  Browse Venues
+                <a href="/#about" className="text-foreground hover:text-primary transition-colors font-medium">
+                  About Us
                 </a>
                 <a href="/#testimonials" className="text-foreground hover:text-primary transition-colors font-medium">
                   Reviews
@@ -102,8 +110,9 @@ const Navbar = () => {
                 <Button variant="ghost" size="default" asChild>
                   <a href="/login">Log In</a>
                 </Button>
-                <Button size="default" asChild>
-                  <a href="/signup">Sign Up</a>
+                <Button size="default" className="btn-press" onClick={handleBookNow}>
+                  <Play className="w-4 h-4 mr-1 fill-current" />
+                  Book Now
                 </Button>
               </div>
             </>
@@ -115,7 +124,7 @@ const Navbar = () => {
                   <Button variant="ghost" size="sm" asChild>
                     <a href="/browse-venues">
                       <Home className="w-4 h-4 mr-2" />
-                      Browse
+                      Book Now
                     </a>
                   </Button>
                   <Button variant="ghost" size="sm" asChild>
@@ -170,8 +179,8 @@ const Navbar = () => {
                 <a href="/#services" className="block py-2 text-foreground hover:text-primary transition-colors font-medium">
                   Sports
                 </a>
-                <a href="/browse-venues" className="block py-2 text-foreground hover:text-primary transition-colors font-medium">
-                  Browse Venues
+                <a href="/#about" className="block py-2 text-foreground hover:text-primary transition-colors font-medium">
+                  About Us
                 </a>
                 <a href="/#testimonials" className="block py-2 text-foreground hover:text-primary transition-colors font-medium">
                   Reviews
@@ -180,8 +189,9 @@ const Navbar = () => {
                   <Button variant="outline" size="default" className="w-full" asChild>
                     <a href="/login">Log In</a>
                   </Button>
-                  <Button size="default" className="w-full" asChild>
-                    <a href="/signup">Sign Up</a>
+                  <Button size="default" className="w-full" onClick={handleBookNow}>
+                    <Play className="w-4 h-4 mr-1 fill-current" />
+                    Book Now
                   </Button>
                 </div>
               </>
@@ -192,8 +202,8 @@ const Navbar = () => {
                   <>
                     <Button variant="ghost" className="w-full justify-start" asChild>
                       <a href="/browse-venues">
-                        <Home className="w-4 h-4 mr-2" />
-                        Browse Venues
+                        <Play className="w-4 h-4 mr-2 fill-current" />
+                        Book Now
                       </a>
                     </Button>
                     <Button variant="ghost" className="w-full justify-start" asChild>
