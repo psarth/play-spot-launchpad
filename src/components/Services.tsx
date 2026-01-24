@@ -38,22 +38,22 @@ const Services = () => {
   const navigate = useNavigate();
 
   return (
-    <section id="services" className="py-20 sm:py-28 bg-muted/30 relative overflow-hidden">
+    <section id="services" className="py-20 sm:py-28 bg-secondary relative overflow-hidden">
       {/* Background Decoration */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/5 rounded-full blur-[100px]"></div>
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/5 rounded-full blur-[100px]"></div>
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-primary/10 rounded-full blur-[100px]"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-accent/10 rounded-full blur-[100px]"></div>
       </div>
 
       <div className="container mx-auto px-4 sm:px-6 relative z-10">
         <div className="text-center mb-16">
-          <span className="inline-block text-sm font-semibold text-primary uppercase tracking-wider mb-4 animate-fade-in-up">
+          <span className="inline-block text-sm font-semibold text-accent uppercase tracking-wider mb-4 animate-fade-in-up">
             Our Sports
           </span>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-5 animate-fade-in-up delay-100">
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-5 text-secondary-foreground animate-fade-in-up delay-100">
             Popular <span className="text-gradient">Sports</span>
           </h2>
-          <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto animate-fade-in-up delay-200">
+          <p className="text-lg sm:text-xl text-secondary-foreground/70 max-w-2xl mx-auto animate-fade-in-up delay-200">
             Book verified venues for your favorite sports, anytime, anywhere in India
           </p>
         </div>
