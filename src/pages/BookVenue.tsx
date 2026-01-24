@@ -960,7 +960,7 @@ const BookVenue = () => {
                     </div>
                     <div className="border-t pt-2 flex justify-between text-lg font-bold">
                       <span>Total</span>
-                      <span className="text-primary">₹{venue.price_per_hour}</span>
+                      <span className="text-primary">₹{selectedSport?.price_per_hour || venue.price_per_hour}</span>
                     </div>
                   </div>
                 )}
