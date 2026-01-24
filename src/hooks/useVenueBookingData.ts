@@ -16,6 +16,7 @@ interface VenueSport {
   id: string;
   sport_id: string;
   sport: Sport;
+  price_per_hour: number;
   tables_courts: TableCourt[];
 }
 
@@ -80,12 +81,13 @@ export const useVenueBookingData = (venueId: string | undefined): UseVenueBookin
 
       setVenue(venueData);
 
-      // Fetch venue sports with tables/courts
+      // Fetch venue sports with tables/courts and price
       const { data: venueSportsData, error: vsError } = await supabase
         .from("venue_sports")
         .select(`
           id,
           sport_id,
+          price_per_hour,
           sports:sport_id (id, name),
           tables_courts (id, name, is_active, display_order)
         `)
@@ -98,6 +100,7 @@ export const useVenueBookingData = (venueId: string | undefined): UseVenueBookin
             id: vs.id,
             sport_id: vs.sport_id,
             sport: vs.sports,
+            price_per_hour: vs.price_per_hour || 500,
             tables_courts: (vs.tables_courts || [])
               .filter((tc: any) => tc.is_active)
               .sort((a: any, b: any) => a.display_order - b.display_order),

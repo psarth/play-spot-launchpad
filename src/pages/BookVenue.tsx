@@ -293,7 +293,9 @@ const BookVenue = () => {
 
     setLoading(true);
 
-    const totalAmount = venue.price_per_hour;
+    // Use per-sport pricing
+    const sportPrice = selectedSport?.price_per_hour || venue.price_per_hour;
+    const totalAmount = sportPrice;
     const selectedTableCourt = tablesCourts.find((tc) => tc.id === selectedTableCourtId);
 
     const { data, error } = await supabase
@@ -528,9 +530,9 @@ const BookVenue = () => {
                 </div>
 
                 {/* Amount */}
-                <div className="text-center p-6 bg-primary/5 rounded-xl border-2 border-primary/20">
+                <div className="text-center p-6 bg-gradient-to-br from-primary/10 to-accent/10 rounded-2xl border-2 border-primary/20">
                   <p className="text-sm text-muted-foreground mb-1">Amount to Pay</p>
-                  <p className="text-4xl font-bold text-primary">₹{venue.price_per_hour}</p>
+                  <p className="text-4xl font-bold text-gradient">₹{selectedSport?.price_per_hour || venue.price_per_hour}</p>
                 </div>
 
                 {/* UPI Payment Section */}
@@ -577,7 +579,7 @@ const BookVenue = () => {
                     <ol className="text-sm text-muted-foreground space-y-2">
                       <li>1. Open any UPI app (GPay, PhonePe, Paytm, etc.)</li>
                       <li>2. Scan the QR code or pay to the UPI ID above</li>
-                      <li>3. Pay exactly ₹{venue.price_per_hour}</li>
+                      <li>3. Pay exactly ₹{selectedSport?.price_per_hour || venue.price_per_hour}</li>
                       <li>4. Click "I Have Paid" button below</li>
                       <li>5. Wait for venue owner to confirm your payment</li>
                     </ol>
@@ -611,7 +613,7 @@ const BookVenue = () => {
                   ) : (
                     <>
                       <CheckCircle className="h-5 w-5 mr-2" />
-                      I Have Paid ₹{venue.price_per_hour}
+                      I Have Paid ₹{selectedSport?.price_per_hour || venue.price_per_hour}
                     </>
                   )}
                 </Button>
@@ -709,17 +711,44 @@ const BookVenue = () => {
                   {venue.description || "Premium sports facility with modern amenities and excellent playing conditions."}
                 </p>
 
-                <div className="flex items-center gap-4 p-4 bg-primary/5 rounded-xl border border-primary/20">
-                  <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <span className="text-2xl font-bold text-primary">₹</span>
-                  </div>
-                  <div>
-                    <p className="text-3xl font-bold text-primary">₹{venue.price_per_hour}</p>
-                    <p className="text-sm text-muted-foreground">per hour</p>
-                  </div>
-                  <div className="ml-auto flex items-center gap-2 text-sm text-muted-foreground">
+                {/* Per-Sport Pricing Display */}
+                <div className="space-y-3">
+                  <h3 className="font-semibold text-lg">Sport Pricing</h3>
+                  {venueSports.length > 0 ? (
+                    <div className="grid gap-2">
+                      {venueSports.map((vs) => (
+                        <div 
+                          key={vs.id} 
+                          className={`flex items-center justify-between p-3 rounded-xl border-2 transition-all ${
+                            selectedSportId === vs.sport_id 
+                              ? "border-primary bg-primary/5" 
+                              : "border-border hover:border-primary/30"
+                          }`}
+                        >
+                          <div className="flex items-center gap-3">
+                            <Dumbbell className="h-4 w-4 text-primary" />
+                            <span className="font-medium">{vs.sport.name}</span>
+                          </div>
+                          <Badge className="price-tag">
+                            ₹{vs.price_per_hour}/hr
+                          </Badge>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-4 p-4 bg-gradient-to-br from-primary/10 to-accent/10 rounded-xl border border-primary/20">
+                      <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                        <span className="text-2xl font-bold text-primary">₹</span>
+                      </div>
+                      <div>
+                        <p className="text-3xl font-bold text-gradient">₹{venue.price_per_hour}</p>
+                        <p className="text-sm text-muted-foreground">per hour</p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Smartphone className="h-4 w-4" />
-                    UPI Accepted
+                    UPI Payments Accepted
                   </div>
                 </div>
 

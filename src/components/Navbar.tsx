@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Menu, User, Calendar, LogOut, Home, Building2, Shield, Play } from "lucide-react";
+import { Menu, User, Calendar, LogOut, Home, Building2, Shield, Play, X } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,6 +10,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -25,6 +26,14 @@ const Navbar = () => {
     });
 
     return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const checkAuth = async () => {
@@ -66,7 +75,6 @@ const Navbar = () => {
     return "My Dashboard";
   };
 
-  // Only customers see Browse and My Bookings
   const isCustomer = userRole === "customer";
 
   const handleBookNow = () => {
@@ -78,15 +86,21 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-card/95 backdrop-blur-md border-b border-border shadow-sm">
+    <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      scrolled 
+        ? "bg-card/95 backdrop-blur-xl border-b border-border shadow-lg" 
+        : "bg-transparent"
+    }`}>
       <div className="container mx-auto px-4 sm:px-6">
-        <div className="flex items-center justify-between h-16">
+        <div className="flex items-center justify-between h-16 sm:h-18">
           {/* Logo */}
-          <a href="/" className="flex items-center space-x-2">
-            <div className="w-9 h-9 bg-primary rounded-xl flex items-center justify-center shadow-md">
-              <span className="text-primary-foreground font-bold text-lg">S</span>
+          <a href="/" className="flex items-center space-x-2.5 group">
+            <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
+              <span className="text-white font-bold text-xl">S</span>
             </div>
-            <span className="text-xl font-bold text-foreground">
+            <span className={`text-xl font-bold transition-colors duration-300 ${
+              scrolled ? "text-foreground" : "text-white"
+            }`}>
               SportSpot
             </span>
           </a>
@@ -95,39 +109,53 @@ const Navbar = () => {
           {!isAuthenticated ? (
             <>
               <div className="hidden md:flex items-center space-x-8">
-                <a href="/#services" className="text-foreground hover:text-primary transition-colors font-medium">
+                <a href="/#services" className={`hover:text-primary transition-colors font-medium ${
+                  scrolled ? "text-foreground" : "text-white/90 hover:text-white"
+                }`}>
                   Sports
                 </a>
-                <a href="/#about" className="text-foreground hover:text-primary transition-colors font-medium">
+                <a href="/#about" className={`hover:text-primary transition-colors font-medium ${
+                  scrolled ? "text-foreground" : "text-white/90 hover:text-white"
+                }`}>
                   About Us
                 </a>
-                <a href="/#testimonials" className="text-foreground hover:text-primary transition-colors font-medium">
+                <a href="/#testimonials" className={`hover:text-primary transition-colors font-medium ${
+                  scrolled ? "text-foreground" : "text-white/90 hover:text-white"
+                }`}>
                   Reviews
                 </a>
               </div>
 
               <div className="hidden md:flex items-center gap-3">
-                <Button variant="ghost" size="default" asChild>
+                <Button 
+                  variant={scrolled ? "ghost" : "outline"} 
+                  size="default" 
+                  asChild
+                  className={!scrolled ? "border-white/20 text-white hover:bg-white/10" : ""}
+                >
                   <a href="/login">Log In</a>
                 </Button>
-                <Button size="default" className="btn-press" onClick={handleBookNow}>
-                  <Play className="w-4 h-4 mr-1 fill-current" />
+                <Button 
+                  size="default" 
+                  className="btn-press bg-gradient-primary hover:opacity-90 shadow-lg" 
+                  onClick={handleBookNow}
+                >
+                  <Play className="w-4 h-4 mr-1.5 fill-current" />
                   Book Now
                 </Button>
               </div>
             </>
           ) : (
             <div className="hidden md:flex items-center gap-4">
-              {/* Only show Browse for customers */}
               {isCustomer && (
                 <>
-                  <Button variant="ghost" size="sm" asChild>
+                  <Button variant="ghost" size="sm" asChild className={!scrolled ? "text-white hover:bg-white/10" : ""}>
                     <a href="/browse-venues">
                       <Home className="w-4 h-4 mr-2" />
                       Book Now
                     </a>
                   </Button>
-                  <Button variant="ghost" size="sm" asChild>
+                  <Button variant="ghost" size="sm" asChild className={!scrolled ? "text-white hover:bg-white/10" : ""}>
                     <a href="/my-bookings">
                       <Calendar className="w-4 h-4 mr-2" />
                       My Bookings
@@ -138,22 +166,26 @@ const Navbar = () => {
               
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className={`gap-2 ${!scrolled ? "border-white/20 text-white hover:bg-white/10" : ""}`}
+                  >
                     {getRoleIcon()}
                     <span className="hidden lg:inline">Account</span>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-48">
-                  <DropdownMenuItem onClick={() => navigate(getDashboardLink())}>
+                <DropdownMenuContent align="end" className="w-52 rounded-xl shadow-xl">
+                  <DropdownMenuItem onClick={() => navigate(getDashboardLink())} className="rounded-lg">
                     {getRoleIcon()}
                     <span className="ml-2">{getRoleLabel()}</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate("/my-profile")}>
+                  <DropdownMenuItem onClick={() => navigate("/my-profile")} className="rounded-lg">
                     <User className="w-4 h-4 mr-2" />
                     My Profile
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive rounded-lg">
                     <LogOut className="w-4 h-4 mr-2" />
                     Logout
                   </DropdownMenuItem>
@@ -164,67 +196,68 @@ const Navbar = () => {
 
           {/* Mobile Menu Button */}
           <button
-            className="md:hidden text-foreground p-2"
+            className={`md:hidden p-2 rounded-lg transition-colors ${
+              scrolled ? "text-foreground hover:bg-muted" : "text-white hover:bg-white/10"
+            }`}
             onClick={() => setIsMenuOpen(!isMenuOpen)}
           >
-            <Menu size={24} />
+            {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 space-y-3 border-t border-border animate-fade-in">
+          <div className="md:hidden py-4 space-y-3 border-t border-border/50 animate-fade-in bg-card rounded-b-2xl shadow-xl">
             {!isAuthenticated ? (
               <>
-                <a href="/#services" className="block py-2 text-foreground hover:text-primary transition-colors font-medium">
+                <a href="/#services" className="block py-3 px-4 text-foreground hover:text-primary hover:bg-muted/50 rounded-xl transition-all font-medium">
                   Sports
                 </a>
-                <a href="/#about" className="block py-2 text-foreground hover:text-primary transition-colors font-medium">
+                <a href="/#about" className="block py-3 px-4 text-foreground hover:text-primary hover:bg-muted/50 rounded-xl transition-all font-medium">
                   About Us
                 </a>
-                <a href="/#testimonials" className="block py-2 text-foreground hover:text-primary transition-colors font-medium">
+                <a href="/#testimonials" className="block py-3 px-4 text-foreground hover:text-primary hover:bg-muted/50 rounded-xl transition-all font-medium">
                   Reviews
                 </a>
-                <div className="flex flex-col gap-2 pt-3 border-t border-border">
-                  <Button variant="outline" size="default" className="w-full" asChild>
+                <div className="flex flex-col gap-3 pt-4 px-4 border-t border-border">
+                  <Button variant="outline" size="lg" className="w-full rounded-xl" asChild>
                     <a href="/login">Log In</a>
                   </Button>
-                  <Button size="default" className="w-full" onClick={handleBookNow}>
-                    <Play className="w-4 h-4 mr-1 fill-current" />
+                  <Button size="lg" className="w-full rounded-xl bg-gradient-primary" onClick={handleBookNow}>
+                    <Play className="w-4 h-4 mr-1.5 fill-current" />
                     Book Now
                   </Button>
                 </div>
               </>
             ) : (
-              <div className="flex flex-col gap-2">
-                {/* Only show Browse & My Bookings for customers */}
+              <div className="flex flex-col gap-2 px-4">
                 {isCustomer && (
                   <>
-                    <Button variant="ghost" className="w-full justify-start" asChild>
+                    <Button variant="ghost" className="w-full justify-start rounded-xl h-12" asChild>
                       <a href="/browse-venues">
-                        <Play className="w-4 h-4 mr-2 fill-current" />
+                        <Play className="w-4 h-4 mr-3 fill-current" />
                         Book Now
                       </a>
                     </Button>
-                    <Button variant="ghost" className="w-full justify-start" asChild>
+                    <Button variant="ghost" className="w-full justify-start rounded-xl h-12" asChild>
                       <a href="/my-bookings">
-                        <Calendar className="w-4 h-4 mr-2" />
+                        <Calendar className="w-4 h-4 mr-3" />
                         My Bookings
                       </a>
                     </Button>
                   </>
                 )}
-                <Button variant="ghost" className="w-full justify-start" onClick={() => navigate(getDashboardLink())}>
+                <Button variant="ghost" className="w-full justify-start rounded-xl h-12" onClick={() => navigate(getDashboardLink())}>
                   {getRoleIcon()}
-                  <span className="ml-2">{getRoleLabel()}</span>
+                  <span className="ml-3">{getRoleLabel()}</span>
                 </Button>
-                <Button variant="ghost" className="w-full justify-start" onClick={() => navigate("/my-profile")}>
-                  <User className="w-4 h-4 mr-2" />
+                <Button variant="ghost" className="w-full justify-start rounded-xl h-12" onClick={() => navigate("/my-profile")}>
+                  <User className="w-4 h-4 mr-3" />
                   My Profile
                 </Button>
-                <div className="border-t border-border pt-2 mt-2">
-                  <Button variant="ghost" className="w-full justify-start text-destructive hover:text-destructive" onClick={handleLogout}>
-                    <LogOut className="w-4 h-4 mr-2" />
+                <div className="border-t border-border pt-3 mt-2">
+                  <Button variant="ghost" className="w-full justify-start rounded-xl h-12 text-destructive hover:text-destructive hover:bg-destructive/10" onClick={handleLogout}>
+                    <LogOut className="w-4 h-4 mr-3" />
                     Logout
                   </Button>
                 </div>

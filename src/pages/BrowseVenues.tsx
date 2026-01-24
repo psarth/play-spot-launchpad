@@ -20,6 +20,7 @@ interface Sport {
 interface VenueSport {
   sport_name: string;
   tables_count: number;
+  price_per_hour: number;
 }
 
 interface Venue {
@@ -86,11 +87,12 @@ const BrowseVenues = () => {
     // Fetch additional data for each venue
     const venuesWithDetails = await Promise.all(
       venuesData.map(async (venue) => {
-        // Fetch venue sports with tables count
+        // Fetch venue sports with tables count and per-sport pricing
         const { data: venueSportsData } = await supabase
           .from("venue_sports")
           .select(`
             sport_id,
+            price_per_hour,
             sports:sport_id (name),
             tables_courts (id)
           `)
@@ -99,6 +101,7 @@ const BrowseVenues = () => {
         const venueSports: VenueSport[] = (venueSportsData || []).map((vs: any) => ({
           sport_name: vs.sports?.name || "Unknown",
           tables_count: vs.tables_courts?.length || 0,
+          price_per_hour: vs.price_per_hour || venue.price_per_hour,
         }));
 
         // Check if venue has payment details
@@ -144,7 +147,7 @@ const BrowseVenues = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-muted/30">
+    <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
       <main className="flex-1 container mx-auto px-4 sm:px-6 py-8 sm:py-12 pt-24">
         {/* Header */}
@@ -210,27 +213,34 @@ const BrowseVenues = () => {
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-            {filteredVenues.map((venue, index) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+            {filteredVenues.map((venue, index) => {
+              // Get price range from sports
+              const prices = venue.venue_sports.map(vs => vs.price_per_hour);
+              const minPrice = prices.length > 0 ? Math.min(...prices) : venue.price_per_hour;
+              const maxPrice = prices.length > 0 ? Math.max(...prices) : venue.price_per_hour;
+              const priceLabel = minPrice === maxPrice ? `₹${minPrice}` : `₹${minPrice} - ₹${maxPrice}`;
+
+              return (
               <Card 
                 key={venue.id} 
-                className="group overflow-hidden hover:shadow-xl hover:border-primary/30 transition-all duration-300 cursor-pointer hover-lift animate-fade-in-up"
+                className="group overflow-hidden border-0 shadow-md hover:shadow-2xl transition-all duration-500 cursor-pointer hover-lift animate-fade-in-up rounded-2xl bg-card"
                 style={{ animationDelay: `${(index + 2) * 50}ms` }}
               >
                 {venue.images && venue.images[0] ? (
-                  <div className="relative h-44 sm:h-52 overflow-hidden">
-                    <img src={venue.images[0]} alt={venue.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                    <div className="absolute inset-0 bg-gradient-to-t from-secondary/80 via-transparent to-transparent"></div>
-                    <div className="absolute top-3 left-3 flex flex-wrap gap-1">
+                  <div className="relative h-48 sm:h-56 overflow-hidden">
+                    <img src={venue.images[0]} alt={venue.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-secondary via-secondary/40 to-transparent"></div>
+                    <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
                       {venue.venue_sports.slice(0, 2).map((vs, idx) => (
-                        <Badge key={idx} className="bg-primary/90 backdrop-blur-sm text-xs">{vs.sport_name}</Badge>
+                        <Badge key={idx} className="bg-primary/90 backdrop-blur-sm text-xs px-2.5 py-1">{vs.sport_name}</Badge>
                       ))}
                       {venue.venue_sports.length > 2 && (
-                        <Badge className="bg-primary/90 backdrop-blur-sm text-xs">+{venue.venue_sports.length - 2}</Badge>
+                        <Badge className="bg-secondary/80 backdrop-blur-sm text-xs">+{venue.venue_sports.length - 2}</Badge>
                       )}
                     </div>
                     <div className="absolute top-3 right-3">
-                      <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm font-bold">₹{venue.price_per_hour}/hr</Badge>
+                      <Badge className="price-tag font-bold text-sm">{priceLabel}/hr</Badge>
                     </div>
                     <div className="absolute bottom-3 left-3">
                       <Badge className="verified-badge text-[10px] gap-1">
@@ -239,15 +249,15 @@ const BrowseVenues = () => {
                     </div>
                   </div>
                 ) : (
-                  <div className="h-44 sm:h-52 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center relative">
-                    <MapPin className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/50" />
-                    <div className="absolute top-3 left-3 flex flex-wrap gap-1">
+                  <div className="h-48 sm:h-56 bg-gradient-to-br from-primary/10 via-accent/5 to-primary/5 flex items-center justify-center relative">
+                    <MapPin className="h-12 w-12 text-muted-foreground/30" />
+                    <div className="absolute top-3 left-3 flex flex-wrap gap-1.5">
                       {venue.venue_sports.slice(0, 2).map((vs, idx) => (
-                        <Badge key={idx} className="bg-primary/90 text-xs">{vs.sport_name}</Badge>
+                        <Badge key={idx} className="bg-primary/90 text-xs px-2.5 py-1">{vs.sport_name}</Badge>
                       ))}
                     </div>
                     <div className="absolute top-3 right-3">
-                      <Badge variant="secondary" className="font-bold">₹{venue.price_per_hour}/hr</Badge>
+                      <Badge className="price-tag font-bold text-sm">{priceLabel}/hr</Badge>
                     </div>
                   </div>
                 )}
@@ -300,7 +310,8 @@ const BrowseVenues = () => {
                   </Button>
                 </CardFooter>
               </Card>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>

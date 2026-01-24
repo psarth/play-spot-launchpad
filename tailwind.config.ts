@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        heading: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
-        body: ['Inter', 'sans-serif'],
+        heading: ['Space Grotesk', 'Plus Jakarta Sans', 'sans-serif'],
+        body: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
