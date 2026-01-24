@@ -8,13 +8,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, MapPin, Star, Shield, Smartphone, Clock, CheckCircle, Play } from "lucide-react";
+import { Search, MapPin, Star, Shield, Smartphone, Clock, CheckCircle, Play, Dumbbell, Table2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Sport {
   id: string;
   name: string;
   icon: string | null;
+}
+
+interface VenueSport {
+  sport_name: string;
+  tables_count: number;
 }
 
 interface Venue {
@@ -28,7 +33,9 @@ interface Venue {
   amenities: string[] | null;
   average_rating: number | null;
   total_reviews: number | null;
-  sports: { name: string };
+  sports: { name: string } | null;
+  venue_sports: VenueSport[];
+  has_payment: boolean;
 }
 
 const BrowseVenues = () => {
@@ -64,19 +71,68 @@ const BrowseVenues = () => {
 
   const fetchVenues = async () => {
     setLoading(true);
-    const { data } = await supabase
+    const { data: venuesData } = await supabase
       .from("venues")
       .select(`*, sports:sport_id (name)`)
       .eq("is_active", true);
-    setVenues(data || []);
-    setFilteredVenues(data || []);
+
+    if (!venuesData) {
+      setVenues([]);
+      setFilteredVenues([]);
+      setLoading(false);
+      return;
+    }
+
+    // Fetch additional data for each venue
+    const venuesWithDetails = await Promise.all(
+      venuesData.map(async (venue) => {
+        // Fetch venue sports with tables count
+        const { data: venueSportsData } = await supabase
+          .from("venue_sports")
+          .select(`
+            sport_id,
+            sports:sport_id (name),
+            tables_courts (id)
+          `)
+          .eq("venue_id", venue.id);
+
+        const venueSports: VenueSport[] = (venueSportsData || []).map((vs: any) => ({
+          sport_name: vs.sports?.name || "Unknown",
+          tables_count: vs.tables_courts?.length || 0,
+        }));
+
+        // Check if venue has payment details
+        const { data: paymentData } = await supabase
+          .from("venue_payment_details")
+          .select("id")
+          .eq("venue_id", venue.id)
+          .eq("is_active", true)
+          .maybeSingle();
+
+        return {
+          ...venue,
+          venue_sports: venueSports,
+          has_payment: !!paymentData,
+        };
+      })
+    );
+
+    // Only show venues that have payment details and sports configured
+    const readyVenues = venuesWithDetails.filter(v => v.has_payment && v.venue_sports.length > 0);
+    
+    setVenues(readyVenues);
+    setFilteredVenues(readyVenues);
     setLoading(false);
   };
 
   const filterVenues = () => {
     let filtered = venues;
     if (selectedSport !== "all") {
-      filtered = filtered.filter((v) => v.sports?.name === sports.find((s) => s.id === selectedSport)?.name);
+      const sportName = sports.find((s) => s.id === selectedSport)?.name;
+      filtered = filtered.filter((v) => 
+        v.venue_sports.some(vs => vs.sport_name === sportName) ||
+        v.sports?.name === sportName
+      );
     }
     if (searchQuery) {
       filtered = filtered.filter((v) =>
@@ -165,8 +221,13 @@ const BrowseVenues = () => {
                   <div className="relative h-44 sm:h-52 overflow-hidden">
                     <img src={venue.images[0]} alt={venue.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                     <div className="absolute inset-0 bg-gradient-to-t from-secondary/80 via-transparent to-transparent"></div>
-                    <div className="absolute top-3 left-3">
-                      <Badge className="bg-primary/90 backdrop-blur-sm">{venue.sports?.name}</Badge>
+                    <div className="absolute top-3 left-3 flex flex-wrap gap-1">
+                      {venue.venue_sports.slice(0, 2).map((vs, idx) => (
+                        <Badge key={idx} className="bg-primary/90 backdrop-blur-sm text-xs">{vs.sport_name}</Badge>
+                      ))}
+                      {venue.venue_sports.length > 2 && (
+                        <Badge className="bg-primary/90 backdrop-blur-sm text-xs">+{venue.venue_sports.length - 2}</Badge>
+                      )}
                     </div>
                     <div className="absolute top-3 right-3">
                       <Badge variant="secondary" className="bg-background/90 backdrop-blur-sm font-bold">₹{venue.price_per_hour}/hr</Badge>
@@ -180,8 +241,10 @@ const BrowseVenues = () => {
                 ) : (
                   <div className="h-44 sm:h-52 bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center relative">
                     <MapPin className="h-10 w-10 sm:h-12 sm:w-12 text-muted-foreground/50" />
-                    <div className="absolute top-3 left-3">
-                      <Badge className="bg-primary/90">{venue.sports?.name}</Badge>
+                    <div className="absolute top-3 left-3 flex flex-wrap gap-1">
+                      {venue.venue_sports.slice(0, 2).map((vs, idx) => (
+                        <Badge key={idx} className="bg-primary/90 text-xs">{vs.sport_name}</Badge>
+                      ))}
                     </div>
                     <div className="absolute top-3 right-3">
                       <Badge variant="secondary" className="font-bold">₹{venue.price_per_hour}/hr</Badge>
@@ -205,6 +268,19 @@ const BrowseVenues = () => {
                       <span className="text-xs text-muted-foreground">({venue.total_reviews} reviews)</span>
                     </div>
                   )}
+                  
+                  {/* Sports & Tables Info */}
+                  {venue.venue_sports.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mb-2">
+                      {venue.venue_sports.map((vs, idx) => (
+                        <Badge key={idx} variant="outline" className="text-[10px] sm:text-xs gap-1">
+                          <Table2 className="h-3 w-3" />
+                          {vs.tables_count} {vs.sport_name}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+
                   {venue.amenities && venue.amenities.length > 0 && (
                     <div className="flex flex-wrap gap-1.5 sm:gap-2">
                       {venue.amenities.slice(0, 3).map((amenity, idx) => (

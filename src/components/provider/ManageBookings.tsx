@@ -2,9 +2,10 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Clock, MapPin, User, Phone, CheckCircle, XCircle, AlertCircle, Smartphone, IndianRupee } from "lucide-react";
+import { Calendar, Clock, MapPin, User, Phone, CheckCircle, XCircle, AlertCircle, Smartphone, IndianRupee, Table2, Dumbbell } from "lucide-react";
 import { StatusBadge } from "@/components/StatusBadge";
 
 interface Booking {
@@ -16,6 +17,7 @@ interface Booking {
   status: string;
   payment_status: string;
   notes: string | null;
+  table_court_id: string | null;
   venues: {
     name: string;
     location: string;
@@ -24,6 +26,8 @@ interface Booking {
     full_name: string;
     phone: string | null;
   } | null;
+  table_court_name?: string;
+  sport_name?: string;
 }
 
 const ManageBookings = () => {
@@ -71,10 +75,38 @@ const ManageBookings = () => {
 
     if (error) {
       toast({ title: "Error fetching bookings", variant: "destructive" });
-    } else {
-      setBookings(data || []);
-      setFilteredBookings(data || []);
+      setLoading(false);
+      return;
     }
+
+    // Fetch table/court info for each booking
+    const bookingsWithDetails = await Promise.all(
+      (data || []).map(async (booking) => {
+        if (!booking.table_court_id) {
+          return booking;
+        }
+
+        const { data: tcData } = await supabase
+          .from("tables_courts")
+          .select(`
+            name,
+            venue_sports:venue_sport_id (
+              sports:sport_id (name)
+            )
+          `)
+          .eq("id", booking.table_court_id)
+          .maybeSingle();
+
+        return {
+          ...booking,
+          table_court_name: tcData?.name,
+          sport_name: (tcData?.venue_sports as any)?.sports?.name,
+        };
+      })
+    );
+
+    setBookings(bookingsWithDetails);
+    setFilteredBookings(bookingsWithDetails);
     setLoading(false);
   };
 
@@ -180,6 +212,24 @@ const ManageBookings = () => {
                 </div>
               </CardHeader>
               <CardContent>
+                {/* Sport & Table/Court Info */}
+                {(booking.sport_name || booking.table_court_name) && (
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {booking.sport_name && (
+                      <Badge variant="secondary" className="flex items-center gap-1">
+                        <Dumbbell className="h-3 w-3" />
+                        {booking.sport_name}
+                      </Badge>
+                    )}
+                    {booking.table_court_name && (
+                      <Badge variant="outline" className="flex items-center gap-1">
+                        <Table2 className="h-3 w-3" />
+                        {booking.table_court_name}
+                      </Badge>
+                    )}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                   <div className="flex items-center gap-3">
                     <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
