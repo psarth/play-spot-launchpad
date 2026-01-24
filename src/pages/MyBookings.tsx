@@ -5,9 +5,10 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
-import { Calendar, Clock, MapPin, Star, Receipt, AlertCircle, Smartphone, CheckCircle } from "lucide-react";
+import { Calendar, Clock, MapPin, Star, Receipt, AlertCircle, Smartphone, CheckCircle, Table2, Dumbbell } from "lucide-react";
 import ReviewDialog from "@/components/customer/ReviewDialog";
 import PaymentReceipt from "@/components/customer/PaymentReceipt";
 import { StatusBadge } from "@/components/StatusBadge";
@@ -22,11 +23,14 @@ interface Booking {
   payment_status: string;
   payment_intent_id: string | null;
   notes: string | null;
+  table_court_id: string | null;
   venues: {
     id: string;
     name: string;
     location: string;
   };
+  table_court_name?: string;
+  sport_name?: string;
 }
 
 interface Review {
@@ -72,9 +76,37 @@ const MyBookings = () => {
 
     if (error) {
       toast({ title: "Error fetching bookings", variant: "destructive" });
-    } else {
-      setBookings(data || []);
+      setLoading(false);
+      return;
     }
+
+    // Fetch table/court info for each booking
+    const bookingsWithDetails = await Promise.all(
+      (data || []).map(async (booking) => {
+        if (!booking.table_court_id) {
+          return booking;
+        }
+
+        const { data: tcData } = await supabase
+          .from("tables_courts")
+          .select(`
+            name,
+            venue_sports:venue_sport_id (
+              sports:sport_id (name)
+            )
+          `)
+          .eq("id", booking.table_court_id)
+          .maybeSingle();
+
+        return {
+          ...booking,
+          table_court_name: tcData?.name,
+          sport_name: (tcData?.venue_sports as any)?.sports?.name,
+        };
+      })
+    );
+
+    setBookings(bookingsWithDetails);
     setLoading(false);
   };
 
@@ -164,6 +196,24 @@ const MyBookings = () => {
         </div>
       </CardHeader>
       <CardContent className="pt-4">
+        {/* Sport & Table/Court Info */}
+        {(booking.sport_name || booking.table_court_name) && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {booking.sport_name && (
+              <Badge variant="secondary" className="flex items-center gap-1">
+                <Dumbbell className="h-3 w-3" />
+                {booking.sport_name}
+              </Badge>
+            )}
+            {booking.table_court_name && (
+              <Badge variant="outline" className="flex items-center gap-1">
+                <Table2 className="h-3 w-3" />
+                {booking.table_court_name}
+              </Badge>
+            )}
+          </div>
+        )}
+
         {/* Status Message */}
         {getStatusMessage(booking.status) && (
           <div className={`flex items-center gap-2 p-3 rounded-lg mb-4 text-sm ${
@@ -357,6 +407,8 @@ const MyBookings = () => {
             totalAmount: receiptDialog.booking.total_amount,
             paymentStatus: receiptDialog.booking.payment_status,
             transactionId: receiptDialog.booking.payment_intent_id || undefined,
+            sportName: receiptDialog.booking.sport_name,
+            tableCourtName: receiptDialog.booking.table_court_name,
           }}
         />
       )}

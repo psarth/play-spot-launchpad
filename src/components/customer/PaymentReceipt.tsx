@@ -14,6 +14,8 @@ interface ReceiptData {
   paymentStatus: string;
   transactionId?: string;
   customerName?: string;
+  sportName?: string;
+  tableCourtName?: string;
 }
 
 interface PaymentReceiptProps {
@@ -146,7 +148,7 @@ Thank you for booking with SportSpot!
         <div ref={receiptRef} className="space-y-6 py-4">
           {/* Success Badge */}
           <div className="text-center">
-            <div className="inline-flex items-center gap-2 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 px-4 py-2 rounded-full">
+            <div className="inline-flex items-center gap-2 bg-success/20 text-success px-4 py-2 rounded-full">
               <CheckCircle className="h-5 w-5" />
               Payment Successful
             </div>
@@ -187,7 +189,7 @@ Thank you for booking with SportSpot!
             )}
             <div className="border-t pt-3 flex justify-between font-bold text-lg">
               <span>Amount Paid</span>
-              <span className="text-green-600">₹{receipt.totalAmount}</span>
+              <span className="text-success">₹{receipt.totalAmount}</span>
             </div>
           </div>
 

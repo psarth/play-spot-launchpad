@@ -4,8 +4,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Trash2, Settings, CreditCard, Dumbbell, AlertTriangle } from "lucide-react";
 import AddVenueDialog from "./AddVenueDialog";
+import VenueConfigDialog from "./VenueConfigDialog";
 
 interface Venue {
   id: string;
@@ -14,13 +15,17 @@ interface Venue {
   price_per_hour: number;
   is_active: boolean;
   description: string | null;
-  sports: { name: string };
+  sports: { name: string } | null;
+  has_payment_details: boolean;
+  sports_count: number;
 }
 
 const ManageVenues = () => {
   const [venues, setVenues] = useState<Venue[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [configDialogOpen, setConfigDialogOpen] = useState(false);
+  const [selectedVenue, setSelectedVenue] = useState<{ id: string; name: string } | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -33,7 +38,8 @@ const ManageVenues = () => {
     
     if (!user) return;
 
-    const { data, error } = await supabase
+    // Fetch venues with their sports
+    const { data: venuesData, error } = await supabase
       .from("venues")
       .select(`
         *,
@@ -44,9 +50,35 @@ const ManageVenues = () => {
 
     if (error) {
       toast({ title: "Error fetching venues", variant: "destructive" });
-    } else {
-      setVenues(data || []);
+      setLoading(false);
+      return;
     }
+
+    // For each venue, check if it has payment details and count sports
+    const venuesWithDetails = await Promise.all(
+      (venuesData || []).map(async (venue) => {
+        // Check payment details
+        const { data: paymentData } = await supabase
+          .from("venue_payment_details")
+          .select("id")
+          .eq("venue_id", venue.id)
+          .maybeSingle();
+
+        // Count venue sports
+        const { count: sportsCount } = await supabase
+          .from("venue_sports")
+          .select("*", { count: "exact", head: true })
+          .eq("venue_id", venue.id);
+
+        return {
+          ...venue,
+          has_payment_details: !!paymentData,
+          sports_count: sportsCount || 0,
+        };
+      })
+    );
+
+    setVenues(venuesWithDetails);
     setLoading(false);
   };
 
@@ -80,6 +112,11 @@ const ManageVenues = () => {
     }
   };
 
+  const openConfigDialog = (venue: { id: string; name: string }) => {
+    setSelectedVenue(venue);
+    setConfigDialogOpen(true);
+  };
+
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
@@ -105,7 +142,7 @@ const ManageVenues = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {venues.map((venue) => (
-            <Card key={venue.id}>
+            <Card key={venue.id} className={!venue.has_payment_details || venue.sports_count === 0 ? "border-warning" : ""}>
               <CardHeader>
                 <div className="flex justify-between items-start">
                   <div>
@@ -119,11 +156,48 @@ const ManageVenues = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground mb-2">{venue.description}</p>
-                <p className="font-semibold mb-4">₹{venue.price_per_hour}/hour</p>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Sport: {venue.sports?.name || 'Not specified'}
-                </p>
-                <div className="flex gap-2">
+                <p className="font-semibold mb-2">₹{venue.price_per_hour}/hour</p>
+                
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {venue.sports?.name && (
+                    <Badge variant="outline">{venue.sports.name}</Badge>
+                  )}
+                  {venue.sports_count > 0 && (
+                    <Badge variant="secondary" className="flex items-center gap-1">
+                      <Dumbbell className="h-3 w-3" />
+                      {venue.sports_count} Sports Configured
+                    </Badge>
+                  )}
+                  {venue.has_payment_details ? (
+                    <Badge variant="secondary" className="flex items-center gap-1 text-primary">
+                      <CreditCard className="h-3 w-3" />
+                      UPI Ready
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="flex items-center gap-1 text-warning border-warning">
+                      <AlertTriangle className="h-3 w-3" />
+                      No Payment Details
+                    </Badge>
+                  )}
+                </div>
+
+                {(!venue.has_payment_details || venue.sports_count === 0) && (
+                  <div className="bg-warning/10 text-warning text-sm p-3 rounded-lg mb-4">
+                    <AlertTriangle className="h-4 w-4 inline mr-2" />
+                    {!venue.has_payment_details && "Add UPI details to receive payments. "}
+                    {venue.sports_count === 0 && "Configure sports and tables/courts."}
+                  </div>
+                )}
+                
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={() => openConfigDialog({ id: venue.id, name: venue.name })}
+                  >
+                    <Settings className="h-4 w-4 mr-1" />
+                    Configure
+                  </Button>
                   <Button
                     variant="outline"
                     size="sm"
@@ -150,6 +224,16 @@ const ManageVenues = () => {
         onOpenChange={setDialogOpen}
         onSuccess={fetchVenues}
       />
+
+      {selectedVenue && (
+        <VenueConfigDialog
+          open={configDialogOpen}
+          onOpenChange={setConfigDialogOpen}
+          venueId={selectedVenue.id}
+          venueName={selectedVenue.name}
+          onUpdate={fetchVenues}
+        />
+      )}
     </div>
   );
 };

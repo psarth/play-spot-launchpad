@@ -30,6 +30,7 @@ export type Database = {
           slot_lock_id: string | null
           start_time: string
           status: string
+          table_court_id: string | null
           total_amount: number
           updated_at: string
           venue_id: string
@@ -49,6 +50,7 @@ export type Database = {
           slot_lock_id?: string | null
           start_time: string
           status?: string
+          table_court_id?: string | null
           total_amount: number
           updated_at?: string
           venue_id: string
@@ -68,6 +70,7 @@ export type Database = {
           slot_lock_id?: string | null
           start_time?: string
           status?: string
+          table_court_id?: string | null
           total_amount?: number
           updated_at?: string
           venue_id?: string
@@ -85,6 +88,13 @@ export type Database = {
             columns: ["slot_lock_id"]
             isOneToOne: false
             referencedRelation: "slot_locks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_table_court_id_fkey"
+            columns: ["table_court_id"]
+            isOneToOne: false
+            referencedRelation: "tables_courts"
             referencedColumns: ["id"]
           },
           {
@@ -346,6 +356,7 @@ export type Database = {
           slot_date: string
           start_time: string
           status: string
+          table_court_id: string | null
           venue_id: string
         }
         Insert: {
@@ -359,6 +370,7 @@ export type Database = {
           slot_date: string
           start_time: string
           status?: string
+          table_court_id?: string | null
           venue_id: string
         }
         Update: {
@@ -372,6 +384,7 @@ export type Database = {
           slot_date?: string
           start_time?: string
           status?: string
+          table_court_id?: string | null
           venue_id?: string
         }
         Relationships: [
@@ -380,6 +393,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "slot_locks_table_court_id_fkey"
+            columns: ["table_court_id"]
+            isOneToOne: false
+            referencedRelation: "tables_courts"
             referencedColumns: ["id"]
           },
           {
@@ -415,6 +435,44 @@ export type Database = {
         }
         Relationships: []
       }
+      tables_courts: {
+        Row: {
+          created_at: string
+          display_order: number
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+          venue_sport_id: string
+        }
+        Insert: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+          venue_sport_id: string
+        }
+        Update: {
+          created_at?: string
+          display_order?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+          venue_sport_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tables_courts_venue_sport_id_fkey"
+            columns: ["venue_sport_id"]
+            isOneToOne: false
+            referencedRelation: "venue_sports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       time_slots: {
         Row: {
           created_at: string
@@ -423,6 +481,7 @@ export type Database = {
           id: string
           is_available: boolean | null
           start_time: string
+          table_court_id: string | null
           venue_id: string
         }
         Insert: {
@@ -432,6 +491,7 @@ export type Database = {
           id?: string
           is_available?: boolean | null
           start_time: string
+          table_court_id?: string | null
           venue_id: string
         }
         Update: {
@@ -441,9 +501,17 @@ export type Database = {
           id?: string
           is_available?: boolean | null
           start_time?: string
+          table_court_id?: string | null
           venue_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "time_slots_table_court_id_fkey"
+            columns: ["table_court_id"]
+            isOneToOne: false
+            referencedRelation: "tables_courts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "time_slots_venue_id_fkey"
             columns: ["venue_id"]
@@ -514,6 +582,80 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      venue_payment_details: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          qr_code_url: string | null
+          updated_at: string
+          upi_id: string
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          qr_code_url?: string | null
+          updated_at?: string
+          upi_id: string
+          venue_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          qr_code_url?: string | null
+          updated_at?: string
+          upi_id?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_payment_details_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: true
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      venue_sports: {
+        Row: {
+          created_at: string
+          id: string
+          sport_id: string
+          venue_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          sport_id: string
+          venue_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          sport_id?: string
+          venue_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "venue_sports_sport_id_fkey"
+            columns: ["sport_id"]
+            isOneToOne: false
+            referencedRelation: "sports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "venue_sports_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       venues: {
         Row: {
