@@ -625,18 +625,21 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          price_per_hour: number
           sport_id: string
           venue_id: string
         }
         Insert: {
           created_at?: string
           id?: string
+          price_per_hour?: number
           sport_id: string
           venue_id: string
         }
         Update: {
           created_at?: string
           id?: string
+          price_per_hour?: number
           sport_id?: string
           venue_id?: string
         }
