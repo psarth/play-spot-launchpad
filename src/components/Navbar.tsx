@@ -88,19 +88,17 @@ const Navbar = () => {
   return (
     <nav className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
       scrolled 
-        ? "bg-card/95 backdrop-blur-xl border-b border-border shadow-lg" 
-        : "bg-transparent"
+        ? "bg-card/95 backdrop-blur-lg border-b border-border shadow-sm" 
+        : "bg-background/95 backdrop-blur-lg border-b border-border/50"
     }`}>
       <div className="container mx-auto px-4 sm:px-6">
         <div className="flex items-center justify-between h-16 sm:h-18">
           {/* Logo */}
           <a href="/" className="flex items-center space-x-2.5 group">
-            <div className="w-10 h-10 bg-gradient-primary rounded-xl flex items-center justify-center shadow-lg group-hover:shadow-xl transition-all duration-300">
-              <span className="text-white font-bold text-xl">S</span>
+            <div className="w-9 h-9 bg-gradient-primary rounded-xl flex items-center justify-center shadow-sm group-hover:shadow-md transition-all duration-300">
+              <span className="text-white font-bold text-lg">S</span>
             </div>
-            <span className={`text-xl font-bold transition-colors duration-300 ${
-              scrolled ? "text-foreground" : "text-white"
-            }`}>
+            <span className="text-lg font-bold text-foreground">
               SportSpot
             </span>
           </a>
@@ -109,38 +107,23 @@ const Navbar = () => {
           {!isAuthenticated ? (
             <>
               <div className="hidden md:flex items-center space-x-8">
-                <a href="/#services" className={`hover:text-primary transition-colors font-medium ${
-                  scrolled ? "text-foreground" : "text-white/90 hover:text-white"
-                }`}>
-                  Sports
+                <a href="/browse-venues" className="text-foreground hover:text-primary transition-colors font-medium">
+                  Venues
                 </a>
-                <a href="/#about" className={`hover:text-primary transition-colors font-medium ${
-                  scrolled ? "text-foreground" : "text-white/90 hover:text-white"
-                }`}>
-                  About Us
-                </a>
-                <a href="/#testimonials" className={`hover:text-primary transition-colors font-medium ${
-                  scrolled ? "text-foreground" : "text-white/90 hover:text-white"
-                }`}>
-                  Reviews
+                <a href="/#about" className="text-foreground hover:text-primary transition-colors font-medium">
+                  About
                 </a>
               </div>
 
               <div className="hidden md:flex items-center gap-3">
-                <Button 
-                  variant={scrolled ? "ghost" : "outline"} 
-                  size="default" 
-                  asChild
-                  className={!scrolled ? "border-white/20 text-white hover:bg-white/10" : ""}
-                >
+                <Button variant="ghost" size="default" asChild>
                   <a href="/login">Log In</a>
                 </Button>
                 <Button 
                   size="default" 
-                  className="btn-press bg-gradient-primary hover:opacity-90 shadow-lg" 
+                  className="btn-press shadow-sm" 
                   onClick={handleBookNow}
                 >
-                  <Play className="w-4 h-4 mr-1.5 fill-current" />
                   Book Now
                 </Button>
               </div>
