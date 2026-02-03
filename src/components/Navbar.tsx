@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -116,6 +117,7 @@ const Navbar = () => {
               </div>
 
               <div className="hidden md:flex items-center gap-3">
+                <ThemeToggle />
                 <Button variant="ghost" size="default" asChild>
                   <a href="/login">Log In</a>
                 </Button>
@@ -130,6 +132,7 @@ const Navbar = () => {
             </>
           ) : (
             <div className="hidden md:flex items-center gap-4">
+              <ThemeToggle />
               {isCustomer && (
                 <>
                   <Button variant="ghost" size="sm" asChild className={!scrolled ? "text-white hover:bg-white/10" : ""}>
