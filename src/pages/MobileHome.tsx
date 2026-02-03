@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { MapPin, Search, TrendingUp, Users } from "lucide-react";
+import { MapPin, Search, TrendingUp, Users, User } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import FilterChips from "@/components/home/FilterChips";
 import VenueCardMobile from "@/components/home/VenueCardMobile";
 import RepeatBookingSection from "@/components/home/RepeatBookingSection";
+import ThemeToggle from "@/components/ThemeToggle";
 
 interface VenueSport {
   sport_name: string;
@@ -184,24 +185,27 @@ const MobileHome = () => {
               <span className="font-heading font-bold text-lg">SportSpot</span>
             </div>
             
-            {isLoggedIn ? (
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => navigate("/my-bookings")}
-                className="text-sm"
-              >
-                My Bookings
-              </Button>
-            ) : (
-              <Button 
-                size="sm"
-                onClick={() => navigate("/login")}
-                className="text-sm btn-press"
-              >
-                Login
-              </Button>
-            )}
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              {isLoggedIn ? (
+                <Button 
+                  variant="ghost" 
+                  size="icon"
+                  onClick={() => navigate("/my-profile")}
+                  className="h-9 w-9 rounded-xl"
+                >
+                  <User className="h-4 w-4" />
+                </Button>
+              ) : (
+                <Button 
+                  size="sm"
+                  onClick={() => navigate("/login")}
+                  className="text-sm btn-press"
+                >
+                  Login
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Search Bar */}

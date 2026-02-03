@@ -80,41 +80,68 @@
   }
 
   .dark {
-    --background: 220 25% 8%;
+    /* === Dark Theme - Neon Sports === */
+    --background: 220 25% 6%;
     --foreground: 0 0% 98%;
     
-    --primary: 160 84% 40%;
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 160 80% 50%;
-    --primary-deep: 160 84% 30%;
+    /* Neon Green Primary */
+    --primary: 150 100% 50%;
+    --primary-foreground: 220 25% 6%;
+    --primary-glow: 150 100% 60%;
+    --primary-deep: 150 100% 40%;
     
-    --secondary: 220 30% 14%;
+    /* Dark Secondary */
+    --secondary: 220 30% 12%;
     --secondary-foreground: 0 0% 98%;
     
-    --accent: 172 66% 55%;
-    --accent-foreground: 220 25% 8%;
+    /* Electric Blue Accent */
+    --accent: 195 100% 50%;
+    --accent-foreground: 220 25% 6%;
     
     --destructive: 0 72% 55%;
     --destructive-foreground: 0 0% 100%;
     
-    --success: 160 84% 45%;
-    --success-foreground: 0 0% 100%;
+    /* Neon Success */
+    --success: 150 100% 50%;
+    --success-foreground: 220 25% 6%;
     
     --warning: 38 92% 55%;
-    --warning-foreground: 220 25% 8%;
+    --warning-foreground: 220 25% 6%;
     
-    --muted: 220 25% 14%;
-    --muted-foreground: 220 15% 60%;
+    --muted: 220 25% 12%;
+    --muted-foreground: 220 15% 55%;
     
-    --popover: 220 25% 10%;
+    --popover: 220 25% 8%;
     --popover-foreground: 0 0% 98%;
     
-    --card: 220 25% 12%;
+    --card: 220 25% 10%;
     --card-foreground: 0 0% 98%;
     
-    --border: 220 25% 18%;
-    --input: 220 25% 18%;
-    --ring: 160 84% 40%;
+    --border: 220 25% 16%;
+    --input: 220 25% 16%;
+    --ring: 150 100% 50%;
+    
+    /* Dark Theme Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(150, 100%, 50%) 0%, hsl(195, 100%, 50%) 100%);
+    --gradient-hero: linear-gradient(180deg, hsl(220, 25%, 6%) 0%, hsl(220, 25%, 10%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(220, 25%, 10%) 0%, hsl(220, 25%, 8%) 100%);
+    --gradient-glow: radial-gradient(ellipse at center, hsl(150, 100%, 50%, 0.15) 0%, transparent 70%);
+    
+    /* Dark Theme Shadows - Glow Effects */
+    --shadow-card: 0 2px 12px -2px hsl(150, 100%, 50%, 0.08);
+    --shadow-glow: 0 0 30px -5px hsl(150, 100%, 50%, 0.3);
+    --shadow-soft: 0 1px 8px -1px hsl(0 0% 0% / 0.3);
+    --shadow-elevated: 0 12px 40px -10px hsl(0 0% 0% / 0.5);
+    
+    /* Sidebar Dark */
+    --sidebar-background: 220 25% 8%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 150 100% 50%;
+    --sidebar-primary-foreground: 220 25% 6%;
+    --sidebar-accent: 195 100% 50%;
+    --sidebar-accent-foreground: 220 25% 6%;
+    --sidebar-border: 220 25% 16%;
+    --sidebar-ring: 150 100% 50%;
   }
 }
 
